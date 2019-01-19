@@ -1,6 +1,6 @@
 # Sheller
 
-![BUILD](https://travis-ci.org/twitchax/Sheller.svg?branch=master)
+[![Build Status](https://travis-ci.org/twitchax/Sheller.svg?branch=master)](https://travis-ci.org/twitchax/Sheller)
 
 A .NET library that makes shelling out commands super easy.  Think of it as a way to build human-readable shell scripts with the power of a full programming language.
 
