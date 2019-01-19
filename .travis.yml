@@ -1,7 +1,7 @@
 sudo: required
 language: csharp
 mono: none
-dotnet: 2.2.102
+dotnet: 2.1.300
 dist: trusty
 
 script:
@@ -10,4 +10,6 @@ script:
 
 
 after_success:
- - dotnet nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package
+- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+    dotnet nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package
+  fi
