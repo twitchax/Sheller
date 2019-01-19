@@ -1,0 +1,13 @@
+sudo: required
+language: csharp
+mono: none
+dotnet: 2.2.102
+dist: trusty
+
+script:
+ - dotnet test
+ - dotnet pack -c Release --include-symbols
+
+
+after_success:
+ - dotnet nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package
