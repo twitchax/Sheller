@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Sheller.Implementations;
 using Sheller.Implementations.Executables;
 using Sheller.Implementations.Shells;

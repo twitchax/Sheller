@@ -3,11 +3,8 @@ using Sheller.Models;
 
 namespace Sheller.Implementations.Executables
 {
-    public class Generic : Executable<ICommandResult>
+    public class Generic : ExecutableBase<Generic>
     {
-        public Generic(string executable, IShell shell) : base(executable, shell, cr => cr)
-        {
-            // TODO: Use Impl methods to define the defaults.
-        }
+        
     }
 }

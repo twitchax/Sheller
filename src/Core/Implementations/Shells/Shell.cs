@@ -93,17 +93,20 @@ namespace Sheller.Implementations.Shells
 
         #region Executable
 
-        public TExecutable UseExecutable<TExecutable>() where TExecutable : IExecutable, new()
+        public TExecutable UseExecutable<TExecutable>() where TExecutable : Executable<TExecutable>, new()
         {
             var result = new TExecutable();
-            result.SetShell(this);
+            result.Initialize(this);
 
             return result;
         }
 
-        public IExecutable<ICommandResult> UseExecutable(string exe)
+        public Generic UseExecutable(string exe)
         {
-            return new Generic(exe, this);
+            var result = new Generic();
+            result.Initialize(exe, this);
+
+            return result;
         }
 
         public virtual string GetCommandArgument(string executableCommand)

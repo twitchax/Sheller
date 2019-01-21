@@ -7,63 +7,79 @@ using Sheller.Models;
 
 namespace Sheller.Implementations.Executables
 {
-    public class Executable<TResult> : IExecutable<TResult>
+    public abstract class Executable<TExecutable, TResult> : Executable<TExecutable>, IExecutable<TExecutable, TResult> where TExecutable : ExecutableBase<TExecutable>, new()
+    {
+        public abstract Task<TResult> ExecuteAsync();
+    }
+
+    public abstract class Executable<TExecutable> : ExecutableBase<TExecutable> where TExecutable : ExecutableBase<TExecutable>, new()
+    {
+        public abstract TExecutable Initialize(IShell shell);
+    }
+
+    public abstract class ExecutableBase<TExecutable, TResult> : ExecutableBase<TExecutable>, IExecutable<TExecutable, TResult> where TExecutable : ExecutableBase<TExecutable>, new()
+    {
+        public abstract Task<TResult> ExecuteAsync();
+    }
+
+    public abstract class ExecutableBase<TExecutable> : IExecutable<TExecutable> where TExecutable : ExecutableBase<TExecutable>, new()
     {
         protected string _executable;
         protected IShell _shell;
-        IEnumerable<string> _arguments;
 
-        protected Func<ICommandResult, bool> _repeatPredicate;
-        protected TimeSpan? _repeatInterval;
-        protected int? _repeatCount;
-
-        protected Func<ICommandResult, bool> _blockPredicate;
-        protected TimeSpan? _blockTimeout;
-
-        protected Func<ICommandResult, TResult> _resultSelector;
-
-        protected Action<string> _dataHandler;
-        protected Action<string> _errorHandler;
-
-        public Executable(string executable, IShell shell, Func<ICommandResult, TResult> resultSelector) : this(executable, shell, null, null, null, null, null, null, resultSelector, null, null)
-        {
-
-        }
+        protected IEnumerable<string> _arguments;
         
-        public Executable(
+        protected IEnumerable<Action<string>> _standardOutputHandlers;
+        protected IEnumerable<Action<string>> _standardErrorHandlers;
+
+        // protected IEnumerable<Func<ICommandResult, Task<bool>>> _repeatPredicate;
+        // protected TimeSpan? _repeatInterval;
+        // protected int? _repeatCount;
+
+        // protected IEnumerable<Func<ICommandResult, Task<bool>>> _blockPredicate;
+        // protected TimeSpan? _blockTimeout;
+
+        public virtual TExecutable Initialize(string executable, IShell shell) => Initialize(executable, shell, null, null, null);
+        public virtual TExecutable Initialize(
             string executable, 
             IShell shell, 
             IEnumerable<string> arguments,
-            Func<ICommandResult, bool> repeatPredicate,
-            TimeSpan? repeatInterval,
-            int? repeatCount,
-            Func<ICommandResult, bool> blockPredicate, 
-            TimeSpan? blockTimeout,
-            Func<ICommandResult, TResult> resultSelector,
-            Action<string> dataHandler,
-            Action<string> errorHandler)
+            IEnumerable<Action<string>> standardOutputHandlers,
+            IEnumerable<Action<string>> standardErrorHandlers//,
+            // IEnumerable<Func<ICommandResult, Task<bool>>> repeatPredicate,
+            // TimeSpan? repeatInterval,
+            // int? repeatCount,
+            // IEnumerable<Func<ICommandResult, Task<bool>>> blockPredicate, 
+            // TimeSpan? blockTimeout
+        )
         {
             _executable = executable;
             _shell = shell;
+
             _arguments = arguments ?? new List<String>();
 
-            _repeatPredicate = repeatPredicate;
-            _repeatInterval = repeatInterval;
-            _repeatCount = repeatCount;
-            _blockPredicate = blockPredicate;
-            _blockTimeout = blockTimeout;
+            _standardOutputHandlers = standardOutputHandlers ?? new List<Action<string>>();
+            _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
 
-            _resultSelector = resultSelector ?? throw new Exception("The `resultSelector` must not be null.");
+            // _repeatPredicate = repeatPredicate ?? new List<Func<ICommandResult, Task<bool>>>();
+            // _repeatInterval = repeatInterval;
+            // _repeatCount = repeatCount;
 
-            _dataHandler = dataHandler;
-            _errorHandler = errorHandler;
+            // _blockPredicate = blockPredicate ?? new List<Func<ICommandResult, Task<bool>>>();
+            // _blockTimeout = blockTimeout;
+
+            return this as TExecutable;
         }
-        
-        public void SetShell(IShell shell) => _shell = shell;
 
-        public Task<TResult> ExecuteAsync() => ExecuteAsyncImpl();
-        protected async virtual Task<TResult> ExecuteAsyncImpl()
+        public virtual Task<ICommandResult> ExecuteAsync() => ExecuteAsync(cr => cr);
+        public virtual Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, TResult> resultSelector) => ExecuteAsync(cr => Task.FromResult(resultSelector(cr)));
+        public async virtual Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, Task<TResult>> resultSelector)
         {
+            if(_executable == null)
+                throw new InvalidOperationException("This executable definition does not define an executable.");
+            if(_shell == null)
+                throw new InvalidOperationException("This executable definition does not define a shell.");
+
             var command = _shell.Path;
             var commandArguments = _shell.GetCommandArgument($"{_executable} {string.Join(" ", _arguments)}");
             
@@ -71,94 +87,60 @@ namespace Sheller.Implementations.Executables
 
             var commandResult = await Helpers.RunCommand(
                 command, 
-                commandArguments, 
-                _shell.EnvironmentVariables,
-                _dataHandler, 
-                _errorHandler/*,loggers)*/);
+                commandArguments,
+                _standardOutputHandlers, 
+                _standardErrorHandlers/*,loggers)*/);
 
-            var result = _resultSelector(commandResult);
+            var result = await resultSelector(commandResult);
 
             // TODO: Block semantics.
 
             return result;
         }
 
-        public IExecutableBase<TResult> WithArgument(params string[] args) => WithArgumentImpl(args);
-        protected virtual Executable<TResult> WithArgumentImpl(params string[] args)
+        public virtual TExecutable WithArgument(params string[] args)
         {
-            return new Executable<TResult>(
+            var result = new TExecutable();
+            result.Initialize(
                 _executable,
                 _shell,
                 Helpers.MergeEnumerables(_arguments, args),
-                _repeatPredicate, _repeatInterval, _repeatCount,
-                _blockPredicate, _blockTimeout,
-                _resultSelector,
-                _dataHandler, _errorHandler);
-        }
-        
+                _standardOutputHandlers, _standardErrorHandlers
+                // _repeatPredicate, _repeatInterval, _repeatCount,
+                // _blockPredicate, _blockTimeout,
+            );
 
-        public IExecutableBaseWithWait<TResult> WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout) => this.WithBlockUntilImpl(predicate, timeout);
-        IExecutableBaseWithWaitAndResultSelector<TResult> IExecutableBaseWithResultSelector<TResult>.WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout) => this.WithBlockUntilImpl(predicate, timeout);
-        IExecutableBaseWithWaitAndHandlers<TResult> IExecutableBaseWithHandlers<TResult>.WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout) => this.WithBlockUntilImpl(predicate, timeout);
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult> IExecutableBaseWithResultSelectorAndHandlers<TResult>.WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout) => this.WithBlockUntilImpl(predicate, timeout);
-        protected virtual Executable<TResult> WithBlockUntilImpl(Func<ICommandResult, bool> predicate, TimeSpan timeout)
+            return result;
+        }
+
+        public virtual TExecutable WithStandardOutputHandler(Action<string> standardOutputHandler)
         {
-            return new Executable<TResult>(
+            var result = new TExecutable();
+            result.Initialize(
                 _executable,
                 _shell,
                 _arguments,
-                _repeatPredicate, _repeatInterval, _repeatCount,
-                predicate, timeout,
-                _resultSelector,
-                _dataHandler, _errorHandler);
+                Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()), _standardErrorHandlers
+                // _repeatPredicate, _repeatInterval, _repeatCount,
+                // _blockPredicate, _blockTimeout,
+            );
+
+            return result;
         }
 
-        public IExecutableBaseWithWait<TResult> WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count) => WithRepeatUntilImpl(predicate, interval, count);
-        IExecutableBaseWithWaitAndResultSelector<TResult> IExecutableBaseWithResultSelector<TResult>.WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count) => WithRepeatUntilImpl(predicate, interval, count);
-        IExecutableBaseWithWaitAndHandlers<TResult> IExecutableBaseWithHandlers<TResult>.WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count) => WithRepeatUntilImpl(predicate, interval, count);
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult> IExecutableBaseWithResultSelectorAndHandlers<TResult>.WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count) => WithRepeatUntilImpl(predicate, interval, count);
-        protected virtual Executable<TResult> WithRepeatUntilImpl(Func<ICommandResult, bool> predicate, TimeSpan interval, int count)
+        public virtual TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler)
         {
-            return new Executable<TResult>(
+            var result = new TExecutable();
+            result.Initialize(
                 _executable,
                 _shell,
                 _arguments,
-                predicate, interval, count,
-                _blockPredicate, _blockTimeout,
-                _resultSelector,
-                _dataHandler, _errorHandler);
-        }
+                _standardOutputHandlers, Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable())
+                // _repeatPredicate, _repeatInterval, _repeatCount,
+                // _blockPredicate, _blockTimeout,
+            );
 
-        public IExecutableBaseWithResultSelector<TNewResult> WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector) => WithResultSelectorImpl(selector);
-        IExecutableBaseWithWaitAndResultSelector<TNewResult> IExecutableBaseWithWait<TResult>.WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector) => WithResultSelectorImpl(selector);
-        IExecutableBaseWithResultSelectorAndHandlers<TNewResult> IExecutableBaseWithHandlers<TResult>.WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector) => WithResultSelectorImpl(selector);
-        IExecutableWithWaitAndResultSelectorAndHandlers<TNewResult> IExecutableBaseWithWaitAndHandlers<TResult>.WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector) => WithResultSelectorImpl(selector);
-        protected virtual Executable<TNewResult> WithResultSelectorImpl<TNewResult>(Func<ICommandResult, TNewResult> selector)
-        {
-            return new Executable<TNewResult>(
-                _executable,
-                _shell,
-                _arguments,
-                _repeatPredicate, _repeatInterval, _repeatCount,
-                _blockPredicate, _blockTimeout,
-                selector,
-                _dataHandler, _errorHandler);
-        }
-
-        public IExecutableBaseWithHandlers<TResult> WithHandlers(Action<string> dataHandler, Action<string> errorHandler) => WithHandlersImpl(dataHandler, errorHandler);
-        IExecutableBaseWithWaitAndHandlers<TResult> IExecutableBaseWithWait<TResult>.WithHandlers(Action<string> dataHandler, Action<string> errorHandler) => WithHandlersImpl(dataHandler, errorHandler);
-        IExecutableBaseWithResultSelectorAndHandlers<TResult> IExecutableBaseWithResultSelector<TResult>.WithHandlers(Action<string> dataHandler, Action<string> errorHandler) => WithHandlersImpl(dataHandler, errorHandler);
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult> IExecutableBaseWithWaitAndResultSelector<TResult>.WithHandlers(Action<string> dataHandler, Action<string> errorHandler) => WithHandlersImpl(dataHandler, errorHandler);
-        protected virtual Executable<TResult> WithHandlersImpl(Action<string> dataHandler, Action<string> errorHandler)
-        {
-            return new Executable<TResult>(
-                _executable,
-                _shell,
-                _arguments,
-                _repeatPredicate, _repeatInterval, _repeatCount,
-                _blockPredicate, _blockTimeout,
-                _resultSelector,
-                dataHandler, errorHandler);
+            return result;
         }
     }
 }

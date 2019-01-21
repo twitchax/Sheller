@@ -1,6 +1,7 @@
 
 
 using System.Collections.Generic;
+using Sheller.Implementations.Executables;
 
 namespace Sheller.Models
 {
@@ -18,8 +19,9 @@ namespace Sheller.Models
         IShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables);
         IShell WithEnvironmentVariables(IEnumerable<(string, string)> variables);
 
-        TExecutable UseExecutable<TExecutable>() where TExecutable : IExecutable, new();
-        IExecutable<ICommandResult> UseExecutable(string exe);
+        TExecutable UseExecutable<TExecutable>() where TExecutable : Executable<TExecutable>, new();
+        //TExecutable UseExecutable<TExecutable>() where TExecutable : Executable<TExecutable, TResult>, new();
+        Generic UseExecutable(string exe);
 
         // TODO: Remove this and the need for a shell name...maybe rename to icommand?
         string GetCommandArgument(string executableCommand);

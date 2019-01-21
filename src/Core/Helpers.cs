@@ -4,15 +4,16 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Sheller.Implementations;
 using Sheller.Models;
 
 namespace Sheller
 {
-    public static class Helpers
+    internal static class Helpers
     {
-        public static IEnumerable<T> MergeEnumerables<T>(params IEnumerable<T>[] lists)
+        internal static IEnumerable<T> MergeEnumerables<T>(params IEnumerable<T>[] lists)
         {
             foreach(var list in lists)
             {
@@ -23,12 +24,12 @@ namespace Sheller
             }
         }
 
-        public static IEnumerable<T> ToEnumerable<T>(this T obj)
+        internal static IEnumerable<T> ToEnumerable<T>(this T obj)
         {
             yield return obj;
         }
 
-        public static IEnumerable<KeyValuePair<T, R>> MergeDictionaries<T, R>(params IEnumerable<KeyValuePair<T, R>>[] dicts)
+        internal static IEnumerable<KeyValuePair<T, R>> MergeDictionaries<T, R>(params IEnumerable<KeyValuePair<T, R>>[] dicts)
         {
             foreach(var dict in dicts)
             {
@@ -39,7 +40,7 @@ namespace Sheller
             }
         }
         
-        public static IEnumerable<KeyValuePair<T, R>> ToDictionary<T, R>(this IEnumerable<(T, R)> kvps)
+        internal static IEnumerable<KeyValuePair<T, R>> ToDictionary<T, R>(this IEnumerable<(T, R)> kvps)
         {
             foreach(var kvp in kvps)
             {
@@ -47,7 +48,7 @@ namespace Sheller
             }
         }
         
-        public static void CopyToStringDictionary(this IEnumerable<KeyValuePair<string, string>> kvps, StringDictionary dict)
+        internal static void CopyToStringDictionary(this IEnumerable<KeyValuePair<string, string>> kvps, StringDictionary dict)
         {
             foreach(var kvp in kvps)
             {
@@ -55,19 +56,19 @@ namespace Sheller
             }
         }
 
-        public static string EscapeQuotes(this string s) => s.Replace("\"", "\\\"");
+        internal static string EscapeQuotes(this string s) => s.Replace("\"", "\\\"");
 
-        public static Task<ICommandResult> RunCommand(
-            string command, 
-            string args, 
-            IEnumerable<KeyValuePair<string, string>> environmentVariables = null, 
-            Action<string> onDataReceived = null, 
-            Action<string> onErrorReceived = null, 
-            IEnumerable<ILogger> loggers = null)
+        internal static Task<ICommandResult> RunCommand(
+            string command,
+            string args,
+            IEnumerable<Action<string>> standardOutputHandlers = null,
+            IEnumerable<Action<string>> standardErrorHandlers = null)
         {
             var t = new Task<ICommandResult>(() => 
             {
-                Process process = new Process();
+                var process = new Process();
+                var standardOutput = new StringBuilder();
+                var standardError = new StringBuilder();
                 
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
@@ -75,25 +76,31 @@ namespace Sheller
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
-
-                // if(environmentVariables != null)
-                //     environmentVariables.CopyToStringDictionary(process.StartInfo.EnvironmentVariables);
                 
-                if(onDataReceived != null)
-                    process.OutputDataReceived += (s, e) => onDataReceived(e.Data);
-                if(onErrorReceived != null)
-                    process.ErrorDataReceived += (s, e) => onErrorReceived(e.Data);
-
-                var a = process.Start();
+                process.OutputDataReceived += (s, e) => 
+                {
+                    standardOutput.Append(e.Data);
+                    if(standardOutputHandlers != null)
+                        foreach(var handler in standardOutputHandlers)
+                            handler(e.Data);
+                };
+                
+                process.ErrorDataReceived += (s, e) => 
+                {
+                    standardError.Append(e.Data);
+                    if(standardErrorHandlers != null)
+                        foreach(var handler in standardErrorHandlers)
+                            handler(e.Data);
+                };
+                
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
                 process.WaitForExit();
 
                 var exitCode = process.ExitCode;
-                var standard = process.StandardOutput.ReadToEnd();
-                var error = process.StandardError.ReadToEnd();
-
-                //logger.LogInfo($"[{command}]\n{standard}");
-                //if(!string.IsNullOrEmpty(error))
-                    //logger.LogError($"[{command}] ERROR\n{error}");
+                var standard = standardOutput.ToString();
+                var error = standardError.ToString();
 
                 return new CommandResult(exitCode, standard, error);
             });

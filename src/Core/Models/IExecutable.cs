@@ -4,77 +4,51 @@ using System.Threading.Tasks;
 
 namespace Sheller.Models
 {
-    public interface IExecutable
+    /// <summary>
+    /// The top-level interface for executables.
+    /// </summary>
+    public interface IExecutable<TExecutable> where TExecutable : IExecutable<TExecutable>
     {
-        void SetShell(IShell shell);
+        // TExecutable Make(IShell shell);
+        // TExecutable Make(string executable, IShell shell) => Make(executable, shell, null, null, null);
+        // TExecutable Make(
+        //     string executable, 
+        //     IShell shell, 
+        //     IEnumerable<string> arguments,
+        //     IEnumerable<Action<string>> standardOutputHandlers,
+        //     IEnumerable<Action<string>> standardErrorHandlers//,
+        //     // IEnumerable<Func<ICommandResult, Task<bool>>> repeatPredicate,
+        //     // TimeSpan? repeatInterval,
+        //     // int? repeatCount,
+        //     // IEnumerable<Func<ICommandResult, Task<bool>>> blockPredicate, 
+        //     // TimeSpan? blockTimeout
+        // );
+
+        Task<ICommandResult> ExecuteAsync();
+        Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, TResult> resultSelector);
+        Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, Task<TResult>> resultSelector);
+
+        TExecutable WithArgument(params string[] args);
+
+        TExecutable WithStandardOutputHandler(Action<string> standardOutputHandler);
+        TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler);
+
+        // IExecutable WithRepeatUntil(Func<ICommandResult, Task<bool>> predicate);
+        // IExecutable WithRepeatUntil(Func<ICommandResult, bool> predicate);
+        // IExecutable WithRepeatInterval(TimeSpan interval);
+        // IExecutable WithRepeatCount(int count);
+
+        // IExecutable WithBlockUntil(Func<ICommandResult, Task<bool>> predicate);
+        // IExecutable WithBlockUntil(Func<ICommandResult, bool> predicate);
+        // IExecutable WithBlockTimeout(TimeSpan timeout);
     }
 
-    public interface IExecutableShared<TResult> : IExecutable
+    /// <summary>
+    /// The shared interface for executables that define the execute method.
+    /// </summary>
+    /// <typeparam name="TResult">The result type of the executable.</typeparam>
+    public interface IExecutable<TExecutable, TResult> : IExecutable<TExecutable> where TExecutable : IExecutable<TExecutable>
     {
         Task<TResult> ExecuteAsync();
-    }
-
-    public interface IExecutableBase<TResult> : IExecutableShared<TResult>
-    {
-        // For docs => argument must come before all others.
-        IExecutableBase<TResult> WithArgument(params string[] args);
-        IExecutableBaseWithWait<TResult> WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count);
-        IExecutableBaseWithWait<TResult> WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout);
-        IExecutableBaseWithResultSelector<TNewResult> WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector);
-        IExecutableBaseWithHandlers<TResult> WithHandlers(Action<string> dataHandler, Action<string> errorHandler);
-    }
-
-    public interface IExecutableBaseWithWait<TResult> : IExecutableShared<TResult>
-    {
-        IExecutableBaseWithWaitAndResultSelector<TNewResult> WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector);
-        IExecutableBaseWithWaitAndHandlers<TResult> WithHandlers(Action<string> dataHandler, Action<string> errorHandler);
-    }
-
-    public interface IExecutableBaseWithResultSelector<TResult> : IExecutableShared<TResult>
-    {
-        IExecutableBaseWithWaitAndResultSelector<TResult> WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count);
-        IExecutableBaseWithWaitAndResultSelector<TResult> WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout);
-        IExecutableBaseWithResultSelectorAndHandlers<TResult> WithHandlers(Action<string> dataHandler, Action<string> errorHandler);
-    }
-
-    public interface IExecutableBaseWithHandlers<TResult> : IExecutableShared<TResult>
-    {
-        IExecutableBaseWithWaitAndHandlers<TResult> WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count);
-        IExecutableBaseWithWaitAndHandlers<TResult> WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout);
-        IExecutableBaseWithResultSelectorAndHandlers<TNewResult> WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector);
-    }
-
-    public interface IExecutableBaseWithWaitAndResultSelector<TResult> : IExecutableShared<TResult>
-    {
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult> WithHandlers(Action<string> dataHandler, Action<string> errorHandler);
-    }
-
-    public interface IExecutableBaseWithWaitAndHandlers<TResult> : IExecutableShared<TResult>
-    {
-        IExecutableWithWaitAndResultSelectorAndHandlers<TNewResult> WithResultSelector<TNewResult>(Func<ICommandResult, TNewResult> selector);
-    }
-
-    public interface IExecutableBaseWithResultSelectorAndHandlers<TResult> : IExecutableShared<TResult>
-    {
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult> WithRepeatUntil(Func<ICommandResult, bool> predicate, TimeSpan interval, int count);
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult> WithBlockUntil(Func<ICommandResult, bool> predicate, TimeSpan timeout);
-    }
-
-    public interface IExecutableWithWaitAndResultSelectorAndHandlers<TResult> : IExecutableShared<TResult>
-    {
-
-    }
-
-    public interface IExecutable<TResult> : 
-        IExecutableBase<TResult>,
-        IExecutableBaseWithWait<TResult>,
-        IExecutableBaseWithResultSelector<TResult>,
-        IExecutableBaseWithHandlers<TResult>,
-        IExecutableBaseWithWaitAndResultSelector<TResult>,
-        IExecutableBaseWithWaitAndHandlers<TResult>,
-        IExecutableBaseWithResultSelectorAndHandlers<TResult>,
-        IExecutableWithWaitAndResultSelectorAndHandlers<TResult>
-    {
-        
     }
 }
