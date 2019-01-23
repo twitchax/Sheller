@@ -17,8 +17,16 @@ dotnet add package Sheller
 Download the source and run.
 
 ```bash
-dotnet test
+dotnet test dotnet test --filter os~nix
 ```
+
+Or.
+
+```bash
+dotnet test dotnet test --filter os~windows
+```
+
+> NOTE: Windows tests require WSL.
 
 ### Compatibility
 

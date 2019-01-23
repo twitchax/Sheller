@@ -60,7 +60,7 @@ namespace Sheller
 
         internal static Task<ICommandResult> RunCommand(
             string command,
-            string args,
+            string args = null,
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null)
         {
@@ -79,7 +79,9 @@ namespace Sheller
                 
                 process.OutputDataReceived += (s, e) => 
                 {
-                    standardOutput.Append(e.Data);
+                    if(e.Data == null) return;
+
+                    standardOutput.AppendLine(e.Data);
                     if(standardOutputHandlers != null)
                         foreach(var handler in standardOutputHandlers)
                             handler(e.Data);
@@ -87,7 +89,9 @@ namespace Sheller
                 
                 process.ErrorDataReceived += (s, e) => 
                 {
-                    standardError.Append(e.Data);
+                    if(e.Data == null) return;
+
+                    standardError.AppendLine(e.Data);
                     if(standardErrorHandlers != null)
                         foreach(var handler in standardErrorHandlers)
                             handler(e.Data);

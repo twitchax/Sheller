@@ -5,7 +5,7 @@ dotnet: 2.2
 dist: xenial
 
 script:
- - dotnet test
+ - dotnet test --filter os~nix
  - dotnet pack -c Release --include-symbols
 
 
