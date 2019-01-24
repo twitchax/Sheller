@@ -78,6 +78,30 @@ namespace Sheller.Tests
 
         [Fact]
         [Trait("os", "nix_windows")]
+        public async void CanExecuteEchoWithTimeout()
+        {
+            var min = 2;
+            var max = 4;
+
+            var start = DateTime.Now;
+            await Assert.ThrowsAnyAsync<Exception>(() =>
+            {
+                return Sheller
+                .Shell<Bash>()
+                .UseExecutable<Sleep>()
+                    .WithArgument(max.ToString())
+                    .WithTimeout(TimeSpan.FromSeconds(2))
+                .ExecuteAsync();
+            });
+            var delta = DateTime.Now - start;
+
+            Console.WriteLine(delta.TotalSeconds);
+            Assert.True(delta.TotalSeconds > min);
+            Assert.True(delta.TotalSeconds < max);
+        }
+
+        [Fact]
+        [Trait("os", "nix_windows")]
         public async void CanExecuteEchoWithStandardOutputHandler()
         {
             var expected = "lol";
@@ -176,7 +200,9 @@ namespace Sheller.Tests
             var max = 4;
 
             var start = DateTime.Now;
-            var echoValue = await Sheller
+            await Assert.ThrowsAnyAsync<Exception>(() =>
+            {
+                return Sheller
                 .Shell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument("dummy")
@@ -184,6 +210,7 @@ namespace Sheller.Tests
                     .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max + 1)))
                     .WithWaitTimeout(TimeSpan.FromSeconds(min))
                 .ExecuteAsync();
+            });
             var delta = DateTime.Now - start;
 
             Assert.True(delta.TotalSeconds > min);

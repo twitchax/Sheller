@@ -29,6 +29,8 @@ namespace Sheller.Implementations.Executables
         protected IShell _shell;
 
         protected IEnumerable<string> _arguments;
+
+        protected TimeSpan _timeout;
         
         protected IEnumerable<Action<string>> _standardOutputHandlers;
         protected IEnumerable<Action<string>> _standardErrorHandlers;
@@ -36,11 +38,12 @@ namespace Sheller.Implementations.Executables
         protected IEnumerable<Func<ICommandResult, Task>> _waitFuncs;
         protected TimeSpan _waitTimeout;
 
-        public virtual TExecutable Initialize(string executable, IShell shell) => Initialize(executable, shell, null, null, null, null, null);
+        public virtual TExecutable Initialize(string executable, IShell shell) => Initialize(executable, shell, null, null, null, null, null, null);
         public virtual TExecutable Initialize(
             string executable, 
             IShell shell, 
             IEnumerable<string> arguments,
+            TimeSpan? timeout,
             IEnumerable<Action<string>> standardOutputHandlers,
             IEnumerable<Action<string>> standardErrorHandlers,
             IEnumerable<Func<ICommandResult, Task>> waitFuncs, 
@@ -52,42 +55,47 @@ namespace Sheller.Implementations.Executables
 
             _arguments = arguments ?? new List<String>();
 
+            _timeout = timeout ?? TimeSpan.FromMinutes(10);
+
             _standardOutputHandlers = standardOutputHandlers ?? new List<Action<string>>();
             _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
 
             _waitFuncs = waitFuncs ?? new List<Func<ICommandResult, Task>>();
-            _waitTimeout = waitTimeout ?? TimeSpan.FromMinutes(1);
+            _waitTimeout = waitTimeout ?? TimeSpan.FromMinutes(10);
 
             return this as TExecutable;
         }
 
-        // NOTE that there is no timeout on the command or the result selector.  The wait only applies to `WithWait`.
         public virtual Task<ICommandResult> ExecuteAsync() => ExecuteAsync(cr => cr);
         public virtual Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, TResult> resultSelector) => ExecuteAsync(cr => Task.FromResult(resultSelector(cr)));
         public async virtual Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, Task<TResult>> resultSelector)
         {
             var command = _shell.Path;
             var commandArguments = _shell.GetCommandArgument($"{_executable} {string.Join(" ", _arguments)}");
-
-            Console.WriteLine(command);
-            var commandResult = await Helpers.RunCommand(
+            
+            Func<Task<TResult>> executionTask = async () =>
+            {
+                var commandResult = await Helpers.RunCommand(
                 command, 
                 commandArguments,
                 _standardOutputHandlers, 
                 _standardErrorHandlers);
 
-            var result = await resultSelector(commandResult);
+                var result = await resultSelector(commandResult);
 
-            // TODO: throw an exception when the timeout is hit?
-            // TODO: add an "overall" timeout?
-
-            // Await (ALL of the wait funcs) OR (the wait timeout), whichever comes first.
-            await Task.WhenAny(
-                Task.WhenAll(_waitFuncs.Select(f => f(commandResult))),
-                Task.Delay(_waitTimeout)
-            );
+                // Await (ALL of the wait funcs) OR (the wait timeout), whichever comes first.
+                var waitAllTask = Task.WhenAll(_waitFuncs.Select(f => f(commandResult)));
+                if (await Task.WhenAny(waitAllTask, Task.Delay(_waitTimeout)) != waitAllTask)
+                    throw new Exception("The wait timeout was reached during the wait block.");
+                    
+                return result;
+            };
             
-            return result;
+            var task = executionTask();
+            if (await Task.WhenAny(task, Task.Delay(_timeout)) != task)
+                throw new Exception("The wait timeout was reached during the wait block.");
+                
+            return task.Result;
         }
 
         public virtual TExecutable WithArgument(params string[] args)
@@ -97,6 +105,22 @@ namespace Sheller.Implementations.Executables
                 _executable,
                 _shell,
                 Helpers.MergeEnumerables(_arguments, args),
+                _timeout,
+                _standardOutputHandlers, _standardErrorHandlers,
+                _waitFuncs, _waitTimeout
+            );
+
+            return result;
+        }
+
+        public TExecutable WithTimeout(TimeSpan timeout)
+        {
+            var result = new TExecutable();
+            result.Initialize(
+                _executable,
+                _shell,
+                _arguments,
+                timeout,
                 _standardOutputHandlers, _standardErrorHandlers,
                 _waitFuncs, _waitTimeout
             );
@@ -111,6 +135,7 @@ namespace Sheller.Implementations.Executables
                 _executable,
                 _shell,
                 _arguments,
+                _timeout,
                 Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()), _standardErrorHandlers,
                 _waitFuncs, _waitTimeout
             );
@@ -125,6 +150,7 @@ namespace Sheller.Implementations.Executables
                 _executable,
                 _shell,
                 _arguments,
+                _timeout,
                 _standardOutputHandlers, Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable()),
                 _waitFuncs, _waitTimeout
             );
@@ -139,6 +165,7 @@ namespace Sheller.Implementations.Executables
                 _executable,
                 _shell,
                 _arguments,
+                _timeout,
                 _standardOutputHandlers, _standardErrorHandlers,
                 Helpers.MergeEnumerables(_waitFuncs, waitFunc.ToEnumerable()), _waitTimeout
             );
@@ -153,6 +180,7 @@ namespace Sheller.Implementations.Executables
                 _executable,
                 _shell,
                 _arguments,
+                _timeout,
                 _standardOutputHandlers, _standardErrorHandlers,
                 _waitFuncs, timeout
             );
