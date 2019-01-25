@@ -7,14 +7,14 @@ using Sheller.Implementations.Executables;
 using Sheller.Implementations.Shells;
 using Xunit;
 
-// NOTE: Windows tests require WSL...because...lazy.
+// NOTE: win tests require WSL...because...lazy.
 
 namespace Sheller.Tests
 {
     public class BasicTests
     {
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoBash()
         {
             var expected = "lol";
@@ -29,7 +29,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithGeneric()
         {
             var expected = "lol";
@@ -61,8 +61,8 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "windows")]
-        public async void CanExecuteEchoWithGenericAndEnvironmentVariableWindows()
+        [Trait("os", "win")]
+        public async void CanExecuteEchoWithGenericAndEnvironmentVariablewin()
         {
             var expected = "lol";
 
@@ -77,7 +77,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithTimeout()
         {
             var min = 2;
@@ -100,7 +100,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithStandardOutputHandler()
         {
             var expected = "lol";
@@ -118,7 +118,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithStandardErrorHandler()
         {
             var expected = "error";
@@ -136,7 +136,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithResultSelector()
         {
             var expected = 0;
@@ -154,7 +154,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithResultSelectorTask()
         {
             var expected = 0;
@@ -173,7 +173,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithWait()
         {
             var min = 2;
@@ -192,7 +192,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix_windows")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithWaitTimeout()
         {
             var min = 2;

@@ -23,7 +23,7 @@ dotnet test --filter os~nix
 Or.
 
 ```bash
-dotnet test --filter os~windows
+dotnet test --filter os~win
 ```
 
 > NOTE: Windows tests require WSL.
