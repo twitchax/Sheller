@@ -90,7 +90,7 @@ namespace Sheller.Tests
                 .Shell<Bash>()
                 .UseExecutable<Sleep>()
                     .WithArgument(max.ToString())
-                    .WithTimeout(TimeSpan.FromSeconds(2))
+                    .WithTimeout(TimeSpan.FromSeconds(min))
                 .ExecuteAsync();
             });
             var delta = DateTime.Now - start;
