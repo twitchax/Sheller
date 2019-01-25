@@ -95,7 +95,6 @@ namespace Sheller.Tests
             });
             var delta = DateTime.Now - start;
 
-            Console.WriteLine(delta.TotalSeconds);
             Assert.True(delta.TotalSeconds > min);
             Assert.True(delta.TotalSeconds < max);
         }
