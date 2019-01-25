@@ -5,16 +5,27 @@ using Sheller.Implementations.Shells;
 using Sheller.Models;
 
 // TODO:
-//   * Finish implementing IExecutable on Executable.  Then, write tests for those features.
-//   * Write the XML docs... ... ...
-//   * WithHandlers should make both arguments null as default values.
-//   * Add an "before" and "after" hook to the executable?  Just make a list.
+//   * "Abstractrify" the Shell class and make it return the concrete type (e.g., `TShell`).
 
 namespace Sheller
 {
+    /// <summary>
+    /// The entrypoint static class for building shell and executables contexts.
+    /// </summary>
     public static class Sheller
     {
+        /// <summary>
+        /// Creates a new shell instance.
+        /// </summary>
+        /// <param name="shell">The name or path of the shell.</param>
+        /// <returns>The shell instance.</returns>
         public static IShell Shell(string shell) => new Shell(shell);
-        public static T Shell<T>() where T : IShell, new() => new T();
+
+        /// <summary>
+        /// Creates a new shell instance.
+        /// </summary>
+        /// <typeparam name="TShell">The type of the shell to instantiate.</typeparam>
+        /// <returns>The shell instance.</returns>
+        public static TShell Shell<TShell>() where TShell : IShell, new() => new TShell();
     }
 }

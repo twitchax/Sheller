@@ -40,7 +40,7 @@ namespace Sheller.Models
         /// <summary>
         /// Sets the timeout on the entire execution of this entire execution context.
         /// </summary>
-        /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
+        /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
         TExecutable WithTimeout(TimeSpan timeout);
 
@@ -66,7 +66,7 @@ namespace Sheller.Models
         /// <summary>
         /// Sets the wait timeout on the <see cref="WithWait"/> <see cref="Func{T}"/>.
         /// </summary>
-        /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
+        /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
         TExecutable WithWaitTimeout(TimeSpan timeout);
     }

@@ -39,4 +39,29 @@ namespace Sheller.Implementations
             StandardError = standardError;
         }
     }
+
+    /// <summary>
+    /// The default result type for executables.
+    /// </summary>
+    /// <typeparam name="TResult">The result type of this <see cref="CommandResult{TResult}"/>.</typeparam>
+    public class CommandResult<TResult> : CommandResult, ICommandResult<TResult>
+    {
+        /// <summary>
+        /// Result property.
+        /// </summary>
+        /// <value>The result of an executable.</value>
+        public TResult Result { get; private set; }
+
+        /// <summary>
+        /// The CommandResult constructor.
+        /// </summary>
+        /// <param name="exitCode"></param>
+        /// <param name="standardOutput"></param>
+        /// <param name="standardError"></param>
+        /// <param name="result"></param>
+        public CommandResult(int exitCode, string standardOutput, string standardError, TResult result) : base(exitCode, standardOutput, standardError)
+        {
+            Result = result;
+        }
+    }
 }
