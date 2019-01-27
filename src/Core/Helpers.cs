@@ -28,6 +28,28 @@ namespace Sheller
             yield return obj;
         }
 
+        internal static IDictionary<T, R> MergeDictionaries<T, R>(params IDictionary<T, R>[] dicts)
+        {
+            var result = new Dictionary<T, R>();
+            foreach(var dict in dicts)
+            {
+                foreach(var kvp in dict)
+                {
+                    result.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            return result;
+        }
+
+        internal static IDictionary<T, R> ToDictionary<T, R>(this (T, R) tuple)
+        {
+            return new Dictionary<T, R>
+            {
+                { tuple.Item1, tuple.Item2 }
+            };
+        }
+
         internal static IEnumerable<KeyValuePair<T, R>> MergeDictionaries<T, R>(params IEnumerable<KeyValuePair<T, R>>[] dicts)
         {
             foreach(var dict in dicts)

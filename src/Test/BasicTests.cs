@@ -87,11 +87,11 @@ namespace Sheller.Tests
             await Assert.ThrowsAnyAsync<Exception>(() =>
             {
                 return Sheller
-                .Shell<Bash>()
-                .UseExecutable<Sleep>()
-                    .WithArgument(max.ToString())
-                    .WithTimeout(TimeSpan.FromSeconds(min))
-                .ExecuteAsync();
+                    .Shell<Bash>()
+                    .UseExecutable<Sleep>()
+                        .WithArgument(max.ToString())
+                        .WithTimeout(TimeSpan.FromSeconds(min))
+                    .ExecuteAsync();
             });
             var delta = DateTime.Now - start;
 
@@ -202,13 +202,13 @@ namespace Sheller.Tests
             await Assert.ThrowsAnyAsync<Exception>(() =>
             {
                 return Sheller
-                .Shell<Bash>()
-                .UseExecutable<Echo>()
-                    .WithArgument("dummy")
-                    .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max)))
-                    .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max + 1)))
-                    .WithWaitTimeout(TimeSpan.FromSeconds(min))
-                .ExecuteAsync();
+                    .Shell<Bash>()
+                    .UseExecutable<Echo>()
+                        .WithArgument("dummy")
+                        .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max)))
+                        .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max + 1)))
+                        .WithWaitTimeout(TimeSpan.FromSeconds(min))
+                    .ExecuteAsync();
             });
             var delta = DateTime.Now - start;
 

@@ -5,7 +5,8 @@ using Sheller.Implementations.Shells;
 using Sheller.Models;
 
 // TODO:
-//   * "Abstractrify" the Shell class and make it return the concrete type (e.g., `TShell`).
+//   * Add tests for handlers on Shell.
+//   * Docs for new interface members.
 
 namespace Sheller
 {

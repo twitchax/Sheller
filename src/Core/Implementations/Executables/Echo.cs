@@ -19,9 +19,6 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="shell">The shell in which the executable should run.</param>
         /// <returns>This instance.</returns>
-        public override Echo Initialize(IShell shell)
-        {
-            return this.Initialize("echo", shell);
-        }
+        public override Echo Initialize(IShell shell) => this.Initialize("echo", shell);
     }
 }
