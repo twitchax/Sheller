@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 
 namespace Sheller.Models
 {
+    /// <summary>
+    /// A top-level interface for executables.
+    /// </summary>
     public interface IExecutable
     {
         /// <summary>
@@ -25,6 +28,10 @@ namespace Sheller.Models
         /// <returns>A task which results in a <typeparamref name="TResult"/> (i.e., the result of the execution).</returns>
         Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, Task<TResult>> resultSelector);
 
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the same settings as the invoking instance.</returns>
         IExecutable Clone();
 
         /// <summary>
@@ -69,11 +76,15 @@ namespace Sheller.Models
     }
 
     /// <summary>
-    /// The top-level interface for executables.
+    /// A top-level interface for executables.
     /// </summary>
     /// <typeparam name="TExecutable">The type of the executable class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
     public interface IExecutable<out TExecutable> : IExecutable where TExecutable : IExecutable<TExecutable>
     {
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the same settings as the invoking instance.</returns>
         new TExecutable Clone();
 
         /// <summary>
@@ -118,7 +129,7 @@ namespace Sheller.Models
     }
 
     /// <summary>
-    /// The interface for executables that define the execute method with a special result type.
+    /// An interface for executables that define the execute method with a special result type.
     /// </summary>
     /// <typeparam name="TExecutable">The type of the executable class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
     /// <typeparam name="TResult">The result type of the executable.</typeparam>

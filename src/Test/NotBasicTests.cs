@@ -12,8 +12,6 @@ namespace Sheller.Tests
         [Trait("os", "nix_win")]
         public async void CanFailOnKubectlKubeConfigCall()
         {
-            var expected = "lol";
-
             await Assert.ThrowsAnyAsync<InvalidOperationException>(async () =>
             {
                 await Sheller

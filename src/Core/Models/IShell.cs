@@ -10,8 +10,18 @@ namespace Sheller.Models
     /// </summary>
     public interface IShell
     {
+        /// <summary>
+        /// Executes a command and arguments in the specified shell.
+        /// </summary>
+        /// <param name="executable">The executable name or path/</param>
+        /// <param name="arguments">The arguments to be passed to the executable (which will be space-separated).</param>
+        /// <returns>A task which results in an <see cref="ICommandResult"/> (i.e., the result of the command execution).</returns>
         Task<ICommandResult> ExecuteCommandAsync(string executable, IEnumerable<string> arguments);
 
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>A `new` instance of <see cref="IShell"/> with the same settings as the invoking instance.</returns>
         IShell Clone();
 
         /// <summary>
@@ -74,6 +84,10 @@ namespace Sheller.Models
     /// <typeparam name="TShell">The type of the shell class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
     public interface IShell<out TShell> : IShell where TShell : IShell<TShell>
     {
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the same settings as the invoking instance.</returns>
         new TShell Clone();
 
         /// <summary>

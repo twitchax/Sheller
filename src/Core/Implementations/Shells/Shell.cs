@@ -72,6 +72,12 @@ namespace Sheller.Implementations.Shells
             return this as TShell;
         }
 
+        /// <summary>
+        /// Executes a command and arguments in the specified shell.
+        /// </summary>
+        /// <param name="executable">The executable name or path/</param>
+        /// <param name="arguments">The arguments to be passed to the executable (which will be space-separated).</param>
+        /// <returns>A task which results in an <see cref="ICommandResult"/> (i.e., the result of the command execution).</returns>
         public virtual Task<ICommandResult> ExecuteCommandAsync(string executable, IEnumerable<string> arguments)
         {
             var command = _shell;
@@ -84,6 +90,10 @@ namespace Sheller.Implementations.Shells
                 _standardErrorHandlers);
         }
 
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the same settings as the invoking instance.</returns>
         public virtual TShell Clone() => 
             new TShell().Initialize(
                 _shell,

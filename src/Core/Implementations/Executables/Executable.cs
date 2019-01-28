@@ -67,6 +67,9 @@ namespace Sheller.Implementations.Executables
 
         private IDictionary<string, object> _state;
 
+        /// <summary>
+        /// The <see cref="State"/> property.null  Allows an implementer to read the saved state for this execution context.
+        /// </summary>
         protected IDictionary<string, object> State => _state;
 
         /// <summary>
@@ -86,6 +89,7 @@ namespace Sheller.Implementations.Executables
         /// <param name="timeout">The timeout of the execution.</param>
         /// <param name="waitFuncs">The wait functions which block execution after the executable execution.</param>
         /// <param name="waitTimeout">The timeout of the wait functions.</param>
+        /// <param name="state">The subclass "state" of the execution context.</param>
         /// <returns>This instance.</returns>
         protected virtual TExecutable Initialize(
             string executable, 
@@ -152,6 +156,10 @@ namespace Sheller.Implementations.Executables
             return task.Result;
         }
 
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the same settings as the invoking instance.</returns>
         public virtual TExecutable Clone() => 
             new TExecutable().Initialize(
                 _executable,
@@ -259,6 +267,12 @@ namespace Sheller.Implementations.Executables
             );
         IExecutable IExecutable.WithWaitTimeout(TimeSpan timeout) => WithWaitTimeout(timeout);
 
+        /// <summary>
+        /// Adds a key/value pair (of which there may be many) to the state of this execution context and returns a new context.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the state values passed to this call.</returns>
         protected virtual TExecutable WithState(string key, object value) =>
             new TExecutable().Initialize(
                 _executable,
