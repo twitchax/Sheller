@@ -101,7 +101,25 @@ namespace Sheller.Tests
 
         [Fact]
         [Trait("os", "nix_win")]
-        public async void CanExecuteEchoWithStandardOutputHandler()
+        public async void CanExecuteEchoWithStandardOutputHandlerOnShell()
+        {
+            var expected = "lol";
+            var handlerString = new StringBuilder();
+
+            var echoValue = await Sheller
+                .Shell<Bash>()
+                    .WithStandardOutputHandler(s => handlerString.Append(s))
+                .UseExecutable<Echo>()
+                    .WithArgument(expected)
+                .ExecuteAsync();
+                
+            Assert.Equal(expected, echoValue);
+            Assert.Equal(expected, handlerString.ToString());
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanExecuteEchoWithStandardOutputHandlerOnExecutable()
         {
             var expected = "lol";
             var handlerString = new StringBuilder();

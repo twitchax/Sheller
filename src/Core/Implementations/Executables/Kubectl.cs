@@ -24,7 +24,7 @@ namespace Sheller.Implementations.Executables
         /// Multiple calls to this method in one execution context will trigger an exception.  It is not required, but convention
         /// would dictate that this method be called before arguments.
         /// </remarks>
-        /// <param name="configPath"></param>
+        /// <param name="configPath">The path to the config file.</param>
         /// <returns>A `new` instance of <see cref="Kubectl"/> with the kubeconfig passed to this call.</returns>
         public Kubectl WithKubeConfig(string configPath)
         {
@@ -32,6 +32,22 @@ namespace Sheller.Implementations.Executables
                 throw new InvalidOperationException($"{nameof(WithKubeConfig)} can only be called once per execution context.");
             
             return this.WithArgument($"--kubeconfig={configPath}").WithState("hasKubeConfig", true);
+        }
+
+        /// <summary>
+        /// Adds an apply argument to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <remarks>
+        /// Multiple calls to this method in one execution context will trigger an exception.
+        /// </remarks>
+        /// <param name="yamlPath">The path to the YAML file.</param>
+        /// <returns>A `new` instance of <see cref="Kubectl"/> with the apply YAML passed to this call.</returns>
+        public Kubectl WithApply(string yamlPath)
+        {
+            if(this.State.TryGetValue("hasApply", out object hasApply) && (bool)hasApply)
+                throw new InvalidOperationException($"{nameof(WithApply)} can only be called once per execution context.");
+            
+            return this.WithArgument("apply", "-f", yamlPath).WithState("hasApply", true);
         }
     }
 }

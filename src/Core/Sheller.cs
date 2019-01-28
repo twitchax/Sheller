@@ -5,8 +5,6 @@ using Sheller.Implementations.Shells;
 using Sheller.Models;
 
 // TODO:
-//   * Add tests for handlers on Shell.
-//   * Docs for new interface members.
 
 namespace Sheller
 {
