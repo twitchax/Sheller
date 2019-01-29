@@ -77,17 +77,23 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="executable">The executable name or path/</param>
         /// <param name="arguments">The arguments to be passed to the executable (which will be space-separated).</param>
+        /// <exception cref="ExecutionFailedException">Thrown when the exit code of the execution is non-zero.</exception>
         /// <returns>A task which results in an <see cref="ICommandResult"/> (i.e., the result of the command execution).</returns>
-        public virtual Task<ICommandResult> ExecuteCommandAsync(string executable, IEnumerable<string> arguments)
+        public virtual async Task<ICommandResult> ExecuteCommandAsync(string executable, IEnumerable<string> arguments)
         {
             var command = _shell;
             var commandArguments = this.GetCommandArgument($"{executable} {string.Join(" ", arguments)}");
             
-            return Helpers.RunCommand(
+            var result = await Helpers.RunCommand(
                 command, 
                 commandArguments,
                 _standardOutputHandlers, 
                 _standardErrorHandlers);
+
+            if(result.ExitCode != 0)
+                throw new ExecutionFailedException($"The execution resulted in a non-zero exit code ({result.ExitCode}).", result);
+
+            return result;
         }
 
         /// <summary>

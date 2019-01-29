@@ -132,10 +132,12 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="resultSelector">A selector which transforms the result of the execution from <see cref="ICommandResult"/> to <see cref="Task{TResult}"/>.</param>
         /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <exception cref="ExecutionFailedException">Thrown when the exit code of the execution is non-zero.</exception>
+        /// <exception cref="ExecutionTimeoutException">Thrown when a timeout is reached.</exception>
         /// <returns>A task which results in a <typeparamref name="TResult"/> (i.e., the result of the execution).</returns>
         public async virtual Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, Task<TResult>> resultSelector)
         {
-            Func<Task<TResult>> executionTask = async () =>
+            async Task<TResult> executionTask()
             {
                 var commandResult = await _shell.ExecuteCommandAsync(_executable, _arguments);
 
@@ -144,16 +146,23 @@ namespace Sheller.Implementations.Executables
                 // Await (ALL of the wait funcs) OR (the wait timeout), whichever comes first.
                 var waitAllTask = Task.WhenAll(_waitFuncs.Select(f => f(commandResult)));
                 if (await Task.WhenAny(waitAllTask, Task.Delay(_waitTimeout)) != waitAllTask)
-                    throw new Exception("The wait timeout was reached during the wait block.");
+                    throw new ExecutionTimeoutException("The wait timeout was reached during the wait block.");
                     
                 return result;
-            };
-            
-            var task = executionTask();
-            if (await Task.WhenAny(task, Task.Delay(_timeout)) != task)
-                throw new Exception("The wait timeout was reached during the wait block.");
-                
-            return task.Result;
+            }
+
+            try
+            {
+                var task = executionTask();
+                if (await Task.WhenAny(task, Task.Delay(_timeout)) != task)
+                    throw new ExecutionTimeoutException("The timeout was reached during execution.");
+
+                return task.Result;
+            }
+            catch(AggregateException ae) when (ae.InnerException is ExecutionException)
+            {
+                throw ae.InnerException;
+            }
         }
 
         /// <summary>

@@ -43,6 +43,23 @@ namespace Sheller.Tests
             Assert.Equal(expected, echoValue);
         }
 
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanThrowWithBadExe()
+        {
+            var expected = 127;
+
+            var exception = await Assert.ThrowsAsync<ExecutionFailedException>(async () =>
+            {
+                var echoValue = await Sheller
+                .Shell<Bash>()
+                .UseExecutable("foo")
+                .ExecuteAsync();
+            });
+
+            Assert.Equal(expected, exception.Result.ExitCode);
+        }
+
 
         [Fact]
         [Trait("os", "nix")]
@@ -84,7 +101,7 @@ namespace Sheller.Tests
             var max = 4;
 
             var start = DateTime.Now;
-            await Assert.ThrowsAnyAsync<Exception>(() =>
+            await Assert.ThrowsAsync<ExecutionTimeoutException>(() =>
             {
                 return Sheller
                     .Shell<Bash>()
@@ -217,7 +234,7 @@ namespace Sheller.Tests
             var max = 4;
 
             var start = DateTime.Now;
-            await Assert.ThrowsAnyAsync<Exception>(() =>
+            await Assert.ThrowsAsync<ExecutionTimeoutException>(() =>
             {
                 return Sheller
                     .Shell<Bash>()
