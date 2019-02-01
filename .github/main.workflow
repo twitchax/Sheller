@@ -1,17 +1,9 @@
-action "build" {
-  uses = "actions/docker/cli@c08a5fc9e0286844156fefff2c141072048141f6"
-  args = "build -t twitchax/shellertest ."
-}
-
-action "test" {
-  uses = "actions/docker/cli@c08a5fc9e0286844156fefff2c141072048141f6"
-  needs = ["build"]
-  args = "run twitchax/shellertest"
-}
-
 workflow "Dotnet Build and Test" {
   on = "push"
-  resolves = ["nuget push", "build and test"]
+  resolves = [
+    "nuget push",
+    "build and test",
+  ]
 }
 
 action "build and test" {
@@ -23,7 +15,9 @@ action "build and test" {
 action "if (branch == master)" {
   uses = "actions/bin/filter@c6471707d308175c57dfe91963406ef205837dbd"
   args = "branch master"
-  needs = ["build and test"]
+  needs = [
+    "build and test",
+  ]
 }
 
 action "pack" {
@@ -39,4 +33,24 @@ action "nuget push" {
   runs = "dotnet"
   args = "nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package"
   secrets = ["NUGET_KEY"]
+}
+
+workflow "New workflow" {
+  on = "push"
+  resolves = ["actions/bin/echo-1"]
+}
+
+action "actions/bin/echo" {
+  uses = "actions/bin/echo@master"
+  args = "$FAKE"
+  secrets = ["FAKE"]
+}
+
+action "actions/bin/echo-1" {
+  uses = "actions/bin/echo@master"
+  needs = ["actions/bin/echo"]
+  args = "$OTHER"
+  env = {
+    OTHER = "cool"
+  }
 }
