@@ -11,17 +11,8 @@ action "build and test" {
   args = "test --filter os~nix"
 }
 
-action "if (branch == master)" {
-  uses = "actions/bin/filter@c6471707d308175c57dfe91963406ef205837dbd"
-  args = "branch master"
-  needs = [
-    "build and test",
-  ]
-}
-
 action "pack" {
   uses = "docker://microsoft/dotnet:2.2-sdk-bionic"
-  needs = ["if (branch == master)"]
   runs = "dotnet"
   args = "pack -c Release"
 }
