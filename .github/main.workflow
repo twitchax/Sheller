@@ -1,9 +1,8 @@
-workflow "Dotnet Build and Test" {
-  on = "push"
+workflow "Release" {
   resolves = [
-    "nuget push",
-    "build and test",
+    "nuget push"
   ]
+  on = "release"
 }
 
 action "build and test" {
@@ -24,7 +23,7 @@ action "pack" {
   uses = "docker://microsoft/dotnet:2.2-sdk-bionic"
   needs = ["if (branch == master)"]
   runs = "dotnet"
-  args = "pack -c Release --include-symbols"
+  args = "pack -c Release"
 }
 
 action "nuget push" {
@@ -35,22 +34,16 @@ action "nuget push" {
   secrets = ["NUGET_KEY"]
 }
 
-workflow "New workflow" {
+workflow "Build and Test" {
+  resolves = [
+    "build and test",
+  ]
   on = "push"
-  resolves = ["env"]
 }
 
-action "secret" {
-  uses = "actions/bin/sh@master"
-  args = ["echo $FAKE"]
-  secrets = ["FAKE"]
-}
-
-action "env" {
-  uses = "actions/bin/sh@master"
-  args = ["echo $OTHER"]
-  env = {
-    OTHER = "cool"
-  }
-  needs = ["secret"]
+workflow "Pull Request" {
+  resolves = [
+    "build and test",
+  ]
+  on = "pull_request"
 }
