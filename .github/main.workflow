@@ -37,20 +37,20 @@ action "nuget push" {
 
 workflow "New workflow" {
   on = "push"
-  resolves = ["actions/bin/echo-1"]
+  resolves = ["env"]
 }
 
-action "actions/bin/echo" {
-  uses = "actions/bin/echo@master"
-  args = "$FAKE"
+action "secret" {
+  uses = "actions/bin/sh@master"
+  args = "echo $FAKE"
   secrets = ["FAKE"]
 }
 
-action "actions/bin/echo-1" {
-  uses = "actions/bin/echo@master"
-  needs = ["actions/bin/echo"]
-  args = "$OTHER"
+action "env" {
+  uses = "actions/bin/sh@master"
+  args = "echo $OTHER"
   env = {
     OTHER = "cool"
   }
+  needs = ["secret"]
 }
