@@ -42,13 +42,13 @@ workflow "New workflow" {
 
 action "secret" {
   uses = "actions/bin/sh@master"
-  args = "echo $FAKE"
+  args = ["echo $FAKE"]
   secrets = ["FAKE"]
 }
 
 action "env" {
   uses = "actions/bin/sh@master"
-  args = "echo $OTHER"
+  args = ["echo $OTHER"]
   env = {
     OTHER = "cool"
   }
