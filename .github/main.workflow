@@ -7,7 +7,7 @@ workflow "Release" {
 
 action "build and test" {
   uses = "twitchax/actions/dotnet@master"
-  args = "test --filter os~nix"
+  args = "test --filter os~nix "
 }
 
 action "pack" {
