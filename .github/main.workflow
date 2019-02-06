@@ -6,7 +6,7 @@ workflow "Release" {
 }
 
 action "build and test" {
-  uses = "twitchax/actions/dotnet@master"
+  uses = "twitchax/actions/dotnet/cli@master"
   args = "test --filter os~nix "
 }
 
