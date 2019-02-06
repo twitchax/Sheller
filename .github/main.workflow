@@ -1,6 +1,6 @@
 workflow "Release" {
   resolves = [
-    "nuget push"
+    "nuget push",
   ]
   on = "release"
 }
@@ -20,8 +20,7 @@ action "pack" {
 action "nuget push" {
   uses = "docker://microsoft/dotnet:2.2-sdk-bionic"
   needs = ["pack"]
-  runs = "dotnet"
-  args = "nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package"
+  runs = "dotnet nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package"
   secrets = ["NUGET_KEY"]
 }
 
