@@ -16,10 +16,10 @@ action "pack" {
 }
 
 action "nuget push" {
-  uses = "twitchax/actions/dotnet/cli@master"
+  uses = "twitchax/actions/dotnet/nuget-push@master"
   needs = ["pack"]
   secrets = ["NUGET_KEY"]
-  args = "nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package"
+  args = "**/Sheller.*.nupkg"
 }
 
 workflow "Build and Test" {
