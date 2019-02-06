@@ -6,8 +6,7 @@ workflow "Release" {
 }
 
 action "build and test" {
-  uses = "docker://microsoft/dotnet:2.2-sdk-bionic"
-  runs = "dotnet"
+  uses = "twitchax/actions/dotnet@master"
   args = "test --filter os~nix"
 }
 
