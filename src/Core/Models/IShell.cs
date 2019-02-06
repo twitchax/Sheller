@@ -45,6 +45,12 @@ namespace Sheller.Models
         IShell WithEnvironmentVariables(IEnumerable<(string, string)> variables);
 
         /// <summary>
+        /// Adds a string to the standard input stream (of which there may be many) to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the standard input passed to this call.</returns>
+        IShell WithStandardInput(string standardInput);
+        /// <summary>
         /// Adds a standard output handler (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
@@ -110,6 +116,12 @@ namespace Sheller.Models
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variables passed in this call.</returns>
         new TShell WithEnvironmentVariables(IEnumerable<(string, string)> variables);
 
+        /// <summary>
+        /// Adds a string to the standard input stream (of which there may be many) to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard input passed to this call.</returns>
+        new TShell WithStandardInput(string standardInput);
         /// <summary>
         /// Adds a standard output handler (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>

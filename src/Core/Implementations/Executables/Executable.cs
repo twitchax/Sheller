@@ -213,6 +213,22 @@ namespace Sheller.Implementations.Executables
         IExecutable IExecutable.WithTimeout(TimeSpan timeout) => WithTimeout(timeout);
 
         /// <summary>
+        /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard input passed to this call.</returns>
+        public TExecutable WithStandardInput(string standardInput) => 
+            new TExecutable().Initialize(
+                _executable,
+                _shell.WithStandardInput(standardInput),
+                _arguments,
+                _timeout,
+                _waitFuncs, _waitTimeout,
+                _state
+            );
+        IExecutable IExecutable.WithStandardInput(string standardInput) => WithStandardInput(standardInput);
+
+        /// <summary>
         /// Adds a standard output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>

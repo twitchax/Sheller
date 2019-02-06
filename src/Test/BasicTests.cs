@@ -172,6 +172,23 @@ namespace Sheller.Tests
 
         [Fact]
         [Trait("os", "nix_win")]
+        public async void CanExecuteEchoWithStandardInput()
+        {
+            var expected1 = "lol";
+            var expected2 = "face";
+
+            var echoResult = await Sheller
+                .Shell<Bash>()
+                .UseExecutable("read var1; read var2; echo $var1$var2")
+                    .WithStandardInput(expected1)
+                    .WithStandardInput(expected2)
+                .ExecuteAsync();
+            
+            Assert.Equal($"{expected1}{expected2}", echoResult.StandardOutput.Trim());
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithResultSelector()
         {
             var expected = 0;

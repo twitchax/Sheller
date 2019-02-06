@@ -49,6 +49,12 @@ namespace Sheller.Models
         IExecutable WithTimeout(TimeSpan timeout);
 
         /// <summary>
+        /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard input passed to this call.</returns>
+        IExecutable WithStandardInput(string standardInput);
+        /// <summary>
         /// Adds a standard output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
@@ -101,6 +107,12 @@ namespace Sheller.Models
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
         new TExecutable WithTimeout(TimeSpan timeout);
 
+        /// <summary>
+        /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard input passed to this call.</returns>
+        new TExecutable WithStandardInput(string standardInput);
         /// <summary>
         /// Adds a standard output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>

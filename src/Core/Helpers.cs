@@ -82,6 +82,7 @@ namespace Sheller
         internal static Task<ICommandResult> RunCommand(
             string command,
             string args = null,
+            IEnumerable<string> standardInputs = null, 
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null)
         {
@@ -94,6 +95,7 @@ namespace Sheller
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
 
+                process.StartInfo.RedirectStandardInput = true;
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
@@ -119,8 +121,14 @@ namespace Sheller
                 };
                 
                 process.Start();
+
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
+
+                if(standardInputs != null)
+                    foreach(var l in standardInputs)
+                        process.StandardInput.WriteLine(l);
+                
                 process.WaitForExit();
 
                 var exitCode = process.ExitCode;

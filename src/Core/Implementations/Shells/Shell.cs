@@ -30,6 +30,7 @@ namespace Sheller.Implementations.Shells
 
         private IEnumerable<KeyValuePair<string, string>> _environmentVariables;
 
+        private IEnumerable<string> _standardInputs;
         private IEnumerable<Action<string>> _standardOutputHandlers;
         private IEnumerable<Action<string>> _standardErrorHandlers;
 
@@ -47,18 +48,20 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
         /// <param name="environmentVariables">The environment variables to set on any executions in this shell.</param>
+        /// <param name="standardInputs">The standard inputs to pass to the execution.</param>
         /// <param name="standardOutputHandlers">The standard output handlers for capture from the execution.</param>
         /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
         protected virtual TShell Initialize(
             string shell, 
             IEnumerable<KeyValuePair<string, string>> environmentVariables,
+            IEnumerable<string> standardInputs,
             IEnumerable<Action<string>> standardOutputHandlers,
             IEnumerable<Action<string>> standardErrorHandlers)
         {
@@ -66,6 +69,7 @@ namespace Sheller.Implementations.Shells
 
             _environmentVariables = environmentVariables ?? new Dictionary<string, string>();
 
+            _standardInputs = standardInputs ?? new List<string>();
             _standardOutputHandlers = standardOutputHandlers ?? new List<Action<string>>();
             _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
 
@@ -87,6 +91,7 @@ namespace Sheller.Implementations.Shells
             var result = await Helpers.RunCommand(
                 command, 
                 commandArguments,
+                _standardInputs,
                 _standardOutputHandlers, 
                 _standardErrorHandlers);
 
@@ -104,7 +109,7 @@ namespace Sheller.Implementations.Shells
             new TShell().Initialize(
                 _shell,
                 _environmentVariables,
-                _standardOutputHandlers, _standardErrorHandlers
+                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
             );
         IShell IShell.Clone() => Clone();
 
@@ -118,7 +123,7 @@ namespace Sheller.Implementations.Shells
             new TShell().Initialize(
                 _shell,
                 Helpers.MergeEnumerables(_environmentVariables, new KeyValuePair<string, string>(key, value).ToEnumerable()),
-                _standardOutputHandlers, _standardErrorHandlers
+                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
             );
         IShell IShell.WithEnvironmentVariable(string key, string value) => WithEnvironmentVariable(key, value);
                 
@@ -131,7 +136,7 @@ namespace Sheller.Implementations.Shells
             new TShell().Initialize(
                 _shell,
                 Helpers.MergeEnumerables(_environmentVariables, variables),
-                _standardOutputHandlers, _standardErrorHandlers
+                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
             );
         IShell IShell.WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => WithEnvironmentVariables(variables);
 
@@ -144,9 +149,22 @@ namespace Sheller.Implementations.Shells
             new TShell().Initialize(
                 _shell,
                 Helpers.MergeEnumerables(_environmentVariables, variables.ToDictionary()),
-                _standardOutputHandlers, _standardErrorHandlers
+                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
             );
         IShell IShell.WithEnvironmentVariables(IEnumerable<(string, string)> variables) => WithEnvironmentVariables(variables);
+
+        /// <summary>
+        /// Adds a string to the standard input stream (of which there may be many) to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardInput">A string that gets passed to the standard input stram of the executable.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard input passed to this call.</returns>
+        public TShell WithStandardInput(string standardInput) =>
+            new TShell().Initialize(
+                _shell,
+                _environmentVariables,
+                Helpers.MergeEnumerables(_standardInputs, standardInput.ToEnumerable()), _standardOutputHandlers, _standardErrorHandlers
+            );
+        IShell IShell.WithStandardInput(string standardInput) => WithStandardInput(standardInput);
 
         /// <summary>
         /// Adds a standard output handler (of which there may be many) to the shell context and returns a `new` context instance.
@@ -157,7 +175,7 @@ namespace Sheller.Implementations.Shells
             new TShell().Initialize(
                 _shell,
                 _environmentVariables,
-                Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()), _standardErrorHandlers
+                _standardInputs, Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()), _standardErrorHandlers
             );
         IShell IShell.WithStandardOutputHandler(Action<string> standardOutputHandler) => WithStandardOutputHandler(standardOutputHandler);
 
@@ -170,7 +188,7 @@ namespace Sheller.Implementations.Shells
             new TShell().Initialize(
                 _shell,
                 _environmentVariables,
-                _standardOutputHandlers, Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable())
+                _standardInputs, _standardOutputHandlers, Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable())
             );
         IShell IShell.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
 
