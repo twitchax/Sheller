@@ -11,16 +11,15 @@ action "build and test" {
 }
 
 action "pack" {
-  uses = "docker://microsoft/dotnet:2.2-sdk-bionic"
-  runs = "dotnet"
+  uses = "twitchax/actions/dotnet/cli@master"
   args = "pack -c Release"
 }
 
 action "nuget push" {
-  uses = "docker://microsoft/dotnet:2.2-sdk-bionic"
+  uses = "twitchax/actions/dotnet/cli@master"
   needs = ["pack"]
-  runs = "dotnet nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package"
   secrets = ["NUGET_KEY"]
+  args = "nuget push src/Core/bin/Release/Sheller.*.nupkg -k $NUGET_KEY -s https://www.nuget.org/api/v2/package"
 }
 
 workflow "Build and Test" {
