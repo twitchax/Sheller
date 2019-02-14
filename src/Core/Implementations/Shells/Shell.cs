@@ -34,6 +34,8 @@ namespace Sheller.Implementations.Shells
         private IEnumerable<Action<string>> _standardOutputHandlers;
         private IEnumerable<Action<string>> _standardErrorHandlers;
 
+        private bool _throws;
+
         /// <summary>
         /// The <see cref="Path"/> property.
         /// </summary>
@@ -48,7 +50,7 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -58,12 +60,14 @@ namespace Sheller.Implementations.Shells
         /// <param name="standardInputs">The standard inputs to pass to the execution.</param>
         /// <param name="standardOutputHandlers">The standard output handlers for capture from the execution.</param>
         /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
+        /// <param name="throws">Indicates that a non-zero exit code throws.</param>
         protected virtual TShell Initialize(
             string shell, 
             IEnumerable<KeyValuePair<string, string>> environmentVariables,
             IEnumerable<string> standardInputs,
             IEnumerable<Action<string>> standardOutputHandlers,
-            IEnumerable<Action<string>> standardErrorHandlers)
+            IEnumerable<Action<string>> standardErrorHandlers,
+            bool? throws)
         {
             _shell = shell;
 
@@ -73,8 +77,27 @@ namespace Sheller.Implementations.Shells
             _standardOutputHandlers = standardOutputHandlers ?? new List<Action<string>>();
             _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
 
+            _throws = throws ?? true;
+
             return this as TShell;
         }
+
+        private static TShell CreateFrom(
+            ShellBase<TShell> old,
+            string shell = null, 
+            IEnumerable<KeyValuePair<string, string>> environmentVariables = null,
+            IEnumerable<string> standardInputs = null,
+            IEnumerable<Action<string>> standardOutputHandlers = null,
+            IEnumerable<Action<string>> standardErrorHandlers = null,
+            bool? throws = null) =>
+                new TShell().Initialize(
+                    shell ?? old._shell,
+                    environmentVariables ?? old._environmentVariables,
+                    standardInputs ?? old._standardInputs,
+                    standardOutputHandlers ?? old._standardOutputHandlers,
+                    standardErrorHandlers ?? old._standardErrorHandlers,
+                    throws ?? old._throws
+                );
 
         /// <summary>
         /// Executes a command and arguments in the specified shell.
@@ -95,7 +118,7 @@ namespace Sheller.Implementations.Shells
                 _standardOutputHandlers, 
                 _standardErrorHandlers);
 
-            if(result.ExitCode != 0)
+            if(_throws && result.ExitCode != 0)
                 throw new ExecutionFailedException($"The execution resulted in a non-zero exit code ({result.ExitCode}).", result);
 
             return result;
@@ -105,12 +128,7 @@ namespace Sheller.Implementations.Shells
         /// Clones this instance.
         /// </summary>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the same settings as the invoking instance.</returns>
-        public virtual TShell Clone() => 
-            new TShell().Initialize(
-                _shell,
-                _environmentVariables,
-                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
-            );
+        public virtual TShell Clone() => CreateFrom(this);
         IShell IShell.Clone() => Clone();
 
         /// <summary>
@@ -119,12 +137,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="key">The environment variable key.</param>
         /// <param name="value">The environment variable value.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variable passed in this call.</returns>
-        public virtual TShell WithEnvironmentVariable(string key, string value) => 
-            new TShell().Initialize(
-                _shell,
-                Helpers.MergeEnumerables(_environmentVariables, new KeyValuePair<string, string>(key, value).ToEnumerable()),
-                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
-            );
+        public virtual TShell WithEnvironmentVariable(string key, string value) => CreateFrom(this, environmentVariables: Helpers.MergeEnumerables(_environmentVariables, new KeyValuePair<string, string>(key, value).ToEnumerable()));
         IShell IShell.WithEnvironmentVariable(string key, string value) => WithEnvironmentVariable(key, value);
                 
         /// <summary>
@@ -132,12 +145,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="variables">The list of key value pairs of environment variables.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variables passed in this call.</returns>
-        public virtual TShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => 
-            new TShell().Initialize(
-                _shell,
-                Helpers.MergeEnumerables(_environmentVariables, variables),
-                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
-            );
+        public virtual TShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => CreateFrom(this, environmentVariables: Helpers.MergeEnumerables(_environmentVariables, variables));
         IShell IShell.WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => WithEnvironmentVariables(variables);
 
         /// <summary>
@@ -145,12 +153,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="variables">The list of tuple of environment variables.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variables passed in this call.</returns>
-        public virtual TShell WithEnvironmentVariables(IEnumerable<(string, string)> variables) =>
-            new TShell().Initialize(
-                _shell,
-                Helpers.MergeEnumerables(_environmentVariables, variables.ToDictionary()),
-                _standardInputs, _standardOutputHandlers, _standardErrorHandlers
-            );
+        public virtual TShell WithEnvironmentVariables(IEnumerable<(string, string)> variables) => CreateFrom(this, environmentVariables: Helpers.MergeEnumerables(_environmentVariables, variables.ToDictionary()));
         IShell IShell.WithEnvironmentVariables(IEnumerable<(string, string)> variables) => WithEnvironmentVariables(variables);
 
         /// <summary>
@@ -158,12 +161,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="standardInput">A string that gets passed to the standard input stram of the executable.</param>
         /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard input passed to this call.</returns>
-        public TShell WithStandardInput(string standardInput) =>
-            new TShell().Initialize(
-                _shell,
-                _environmentVariables,
-                Helpers.MergeEnumerables(_standardInputs, standardInput.ToEnumerable()), _standardOutputHandlers, _standardErrorHandlers
-            );
+        public TShell WithStandardInput(string standardInput) => CreateFrom(this, standardInputs: Helpers.MergeEnumerables(_standardInputs, standardInput.ToEnumerable()));
         IShell IShell.WithStandardInput(string standardInput) => WithStandardInput(standardInput);
 
         /// <summary>
@@ -171,12 +169,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard output handler passed to this call.</returns>
-        public virtual TShell WithStandardOutputHandler(Action<string> standardOutputHandler) =>
-            new TShell().Initialize(
-                _shell,
-                _environmentVariables,
-                _standardInputs, Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()), _standardErrorHandlers
-            );
+        public virtual TShell WithStandardOutputHandler(Action<string> standardOutputHandler) => CreateFrom(this, standardOutputHandlers: Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()));
         IShell IShell.WithStandardOutputHandler(Action<string> standardOutputHandler) => WithStandardOutputHandler(standardOutputHandler);
 
         /// <summary>
@@ -184,13 +177,15 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
-        public virtual TShell WithStandardErrorHandler(Action<string> standardErrorHandler) =>
-            new TShell().Initialize(
-                _shell,
-                _environmentVariables,
-                _standardInputs, _standardOutputHandlers, Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable())
-            );
+        public virtual TShell WithStandardErrorHandler(Action<string> standardErrorHandler) => CreateFrom(this, standardErrorHandlers: Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable()));
         IShell IShell.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
+
+        /// <summary>
+        /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> that will not throw on a non-zero exit code.</returns>
+        public TShell WithNoThrow() => CreateFrom(this, throws: false);
+        IShell IShell.WithNoThrow() => WithNoThrow();
 
         /// <summary>
         /// Adds an executable and switches to the executable context.

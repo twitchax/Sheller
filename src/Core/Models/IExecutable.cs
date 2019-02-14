@@ -79,6 +79,12 @@ namespace Sheller.Models
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> with the wait timeout set to the value passed to this call.</returns>
         IExecutable WithWaitTimeout(TimeSpan timeout);
+
+        /// <summary>
+        /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> that will not throw on a non-zero exit code.</returns>
+        IExecutable WithNoThrow();
     }
 
     /// <summary>
@@ -138,6 +144,12 @@ namespace Sheller.Models
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
         new TExecutable WithWaitTimeout(TimeSpan timeout);
+
+        /// <summary>
+        /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> that will not throw on a non-zero exit code.</returns>
+        new TExecutable WithNoThrow();
     }
 
     /// <summary>

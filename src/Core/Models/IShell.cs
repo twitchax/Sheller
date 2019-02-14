@@ -64,6 +64,12 @@ namespace Sheller.Models
         IShell WithStandardErrorHandler(Action<string> standardErrorHandler);
 
         /// <summary>
+        /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <see cref="IShell"/> that will not throw on a non-zero exit code.</returns>
+        IShell WithNoThrow();
+
+        /// <summary>
         /// Adds an executable and switches to the executable context.
         /// </summary>
         /// <typeparam name="TExecutable">The type of the executable to use.</typeparam>
@@ -134,5 +140,11 @@ namespace Sheller.Models
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
         new TShell WithStandardErrorHandler(Action<string> standardErrorHandler);
+
+        /// <summary>
+        /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> that will not throw on a non-zero exit code.</returns>
+        new TShell WithNoThrow();
     }
 }

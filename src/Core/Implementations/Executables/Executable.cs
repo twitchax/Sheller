@@ -115,6 +115,25 @@ namespace Sheller.Implementations.Executables
             return this as TExecutable;
         }
 
+        private static TExecutable CreateFrom(
+            ExecutableBase<TExecutable> old,
+            string executable = null, 
+            IShell shell = null, 
+            IEnumerable<string> arguments = null,
+            TimeSpan? timeout = null,
+            IEnumerable<Func<ICommandResult, Task>> waitFuncs = null, 
+            TimeSpan? waitTimeout = null,
+            IDictionary<string, object> state = null) =>
+                new TExecutable().Initialize(
+                    executable ?? old._executable,
+                    shell ?? old._shell,
+                    arguments ?? old._arguments,
+                    timeout ?? old._timeout,
+                    waitFuncs ?? old._waitFuncs,
+                    waitTimeout ?? old._waitTimeout,
+                    state ?? old._state
+                );
+
         /// <summary>
         /// Executes the executable.
         /// </summary>
@@ -155,7 +174,7 @@ namespace Sheller.Implementations.Executables
             {
                 var task = executionTask();
                 if (await Task.WhenAny(task, Task.Delay(_timeout)) != task)
-                    throw new ExecutionTimeoutException("The timeout was reached during execution.");
+                    throw new ExecutionTimeoutException("The timeout was reached during execution."); 
 
                 return task.Result;
             }
@@ -169,15 +188,7 @@ namespace Sheller.Implementations.Executables
         /// Clones this instance.
         /// </summary>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the same settings as the invoking instance.</returns>
-        public virtual TExecutable Clone() => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell,
-                _arguments,
-                _timeout,
-                _waitFuncs, _waitTimeout,
-                _state
-            );
+        public virtual TExecutable Clone() => CreateFrom(this);
         IExecutable IExecutable.Clone() => Clone();
 
         /// <summary>
@@ -185,15 +196,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        public virtual TExecutable WithArgument(params string[] args) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell,
-                Helpers.MergeEnumerables(_arguments, args),
-                _timeout,
-                _waitFuncs, _waitTimeout,
-                _state
-            );
+        public virtual TExecutable WithArgument(params string[] args) => CreateFrom(this, arguments: Helpers.MergeEnumerables(_arguments, args));
         IExecutable IExecutable.WithArgument(params string[] args) => WithArgument(args);
 
         /// <summary>
@@ -201,15 +204,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
-        public virtual TExecutable WithTimeout(TimeSpan timeout) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell,
-                _arguments,
-                timeout,
-                _waitFuncs, _waitTimeout,
-                _state
-            );
+        public virtual TExecutable WithTimeout(TimeSpan timeout) => CreateFrom(this, timeout: timeout);
         IExecutable IExecutable.WithTimeout(TimeSpan timeout) => WithTimeout(timeout);
 
         /// <summary>
@@ -217,15 +212,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard input passed to this call.</returns>
-        public TExecutable WithStandardInput(string standardInput) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell.WithStandardInput(standardInput),
-                _arguments,
-                _timeout,
-                _waitFuncs, _waitTimeout,
-                _state
-            );
+        public TExecutable WithStandardInput(string standardInput) => CreateFrom(this, shell: _shell.WithStandardInput(standardInput));
         IExecutable IExecutable.WithStandardInput(string standardInput) => WithStandardInput(standardInput);
 
         /// <summary>
@@ -233,15 +220,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard output handler passed to this call.</returns>
-        public virtual TExecutable WithStandardOutputHandler(Action<string> standardOutputHandler) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell.WithStandardOutputHandler(standardOutputHandler),
-                _arguments,
-                _timeout,
-                _waitFuncs, _waitTimeout,
-                _state
-            );
+        public virtual TExecutable WithStandardOutputHandler(Action<string> standardOutputHandler) => CreateFrom(this, shell: _shell.WithStandardOutputHandler(standardOutputHandler));
         IExecutable IExecutable.WithStandardOutputHandler(Action<string> standardOutputHandler) => WithStandardOutputHandler(standardOutputHandler);
 
         /// <summary>
@@ -249,15 +228,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard error handler passed to this call.</returns>
-        public virtual TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell.WithStandardErrorHandler(standardErrorHandler),
-                _arguments,
-                _timeout,
-                _waitFuncs, _waitTimeout,
-                _state
-            );
+        public virtual TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler) => CreateFrom(this, shell: _shell.WithStandardErrorHandler(standardErrorHandler));
         IExecutable IExecutable.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
 
         /// <summary>
@@ -265,15 +236,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="waitFunc">A <see cref="Func{T}"/> which takes an <see cref="ICommandResult"/> and returns a <see cref="Task"/> which will function as wait condition upon the completion of execution.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait func passed to this call.</returns>
-        public virtual TExecutable WithWait(Func<ICommandResult, Task> waitFunc) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell,
-                _arguments,
-                _timeout,
-                Helpers.MergeEnumerables(_waitFuncs, waitFunc.ToEnumerable()), _waitTimeout,
-                _state
-            );
+        public virtual TExecutable WithWait(Func<ICommandResult, Task> waitFunc) => CreateFrom(this, waitFuncs: Helpers.MergeEnumerables(_waitFuncs, waitFunc.ToEnumerable()));
         IExecutable IExecutable.WithWait(Func<ICommandResult, Task> waitFunc) => WithWait(waitFunc);
 
         /// <summary>
@@ -281,15 +244,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
-        public virtual TExecutable WithWaitTimeout(TimeSpan timeout) => 
-            new TExecutable().Initialize(
-                _executable,
-                _shell,
-                _arguments,
-                _timeout,
-                _waitFuncs, timeout,
-                _state
-            );
+        public virtual TExecutable WithWaitTimeout(TimeSpan timeout) => CreateFrom(this, waitTimeout: timeout);
         IExecutable IExecutable.WithWaitTimeout(TimeSpan timeout) => WithWaitTimeout(timeout);
 
         /// <summary>
@@ -298,14 +253,13 @@ namespace Sheller.Implementations.Executables
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the state values passed to this call.</returns>
-        protected virtual TExecutable WithState(string key, object value) =>
-            new TExecutable().Initialize(
-                _executable,
-                _shell,
-                _arguments,
-                _timeout,
-                _waitFuncs, _timeout,
-                Helpers.MergeDictionaries(_state, (key, value).ToDictionary())
-            );
+        protected virtual TExecutable WithState(string key, object value) => CreateFrom(this, state: Helpers.MergeDictionaries(_state, (key, value).ToDictionary()));
+
+        /// <summary>
+        /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> that will not throw on a non-zero exit code.</returns>
+        public TExecutable WithNoThrow() => CreateFrom(this, shell: _shell.WithNoThrow());
+        IExecutable IExecutable.WithNoThrow() => WithNoThrow();
     }
 }
