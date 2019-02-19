@@ -137,11 +137,13 @@ namespace Sheller
                                 break;
                             
                             foreach(ProcessThread thread in process.Threads)
-                                if (thread.ThreadState == System.Diagnostics.ThreadState.Wait && thread.WaitReason == ThreadWaitReason.UserRequest)
+                            {
+                                if (thread.ThreadState == System.Diagnostics.ThreadState.Wait && (thread.WaitReason == ThreadWaitReason.UserRequest || thread.WaitReason == ThreadWaitReason.Unknown /* hack fix for linux: should be more precise */))
                                 {
                                     process.StandardInput.WriteLine(await inputRequestHandler(standardOutput.ToString(), standardError.ToString()));
                                     break;
                                 }
+                            }
                         }
                     });
                 }
