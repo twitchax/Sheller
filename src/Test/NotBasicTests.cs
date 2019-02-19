@@ -14,8 +14,8 @@ namespace Sheller.Tests
         {
             await Assert.ThrowsAnyAsync<InvalidOperationException>(async () =>
             {
-                await Sheller
-                    .Shell<Bash>()
+                await Builder
+                    .UseShell<Bash>()
                     .UseExecutable<Kubectl>()
                         .WithKubeConfig("fake")
                         .WithKubeConfig("path")

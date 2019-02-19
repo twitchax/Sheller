@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations;
 using Sheller.Models;
@@ -84,7 +85,8 @@ namespace Sheller
             string args = null,
             IEnumerable<string> standardInputs = null, 
             IEnumerable<Action<string>> standardOutputHandlers = null,
-            IEnumerable<Action<string>> standardErrorHandlers = null)
+            IEnumerable<Action<string>> standardErrorHandlers = null,
+            Func<string, string, Task<string>> inputRequestHandler = null)
         {
             var t = new Task<ICommandResult>(() => 
             {
@@ -119,7 +121,31 @@ namespace Sheller
                         foreach(var handler in standardErrorHandlers)
                             handler(e.Data);
                 };
-                
+
+                if(inputRequestHandler != null)
+                {
+                    Task.Run(async () => 
+                    {
+                        while(true)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(1));
+
+                            if(!process.IsProcessAlive())
+                                continue;
+
+                            if(process.HasExited)
+                                break;
+                            
+                            foreach(ProcessThread thread in process.Threads)
+                                if (thread.ThreadState == System.Diagnostics.ThreadState.Wait && thread.WaitReason == ThreadWaitReason.UserRequest)
+                                {
+                                    process.StandardInput.WriteLine(await inputRequestHandler(standardOutput.ToString(), standardError.ToString()));
+                                    break;
+                                }
+                        }
+                    });
+                }
+
                 process.Start();
 
                 process.BeginOutputReadLine();
@@ -131,15 +157,29 @@ namespace Sheller
                 
                 process.WaitForExit();
 
+                var succeeded = process.ExitCode == 0;
                 var exitCode = process.ExitCode;
                 var standard = standardOutput.ToString();
                 var error = standardError.ToString();
 
-                return new CommandResult(exitCode, standard, error);
+                return new CommandResult(succeeded, exitCode, standard, error);
             });
             t.Start();
 
             return t;
+        }
+
+        static bool IsProcessAlive(this Process p)
+        {
+            try
+            {
+                var dummy = p.Id;
+                return true;
+            }
+            catch(Exception)
+            {
+                return false;
+            }
         }
     }
 }

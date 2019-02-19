@@ -62,12 +62,22 @@ namespace Sheller.Models
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of type <see cref="IShell"/> with the standard error handler passed to this call.</returns>
         IShell WithStandardErrorHandler(Action<string> standardErrorHandler);
+        /// <summary>
+        /// Adds a (user) input request handler to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="inputRequestHandler">
+        /// A <see cref="Func{T}"/> that handles when the shell blocks for user input during an execution.
+        /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
+        /// that will be passed to the executable as StandardInput.
+        /// </param>
+        /// <returns>A `new` instance of <see cref="IShell"/> with the request handler passed to this call.</returns>
+        IShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <see cref="IShell"/> that will not throw on a non-zero exit code.</returns>
-        IShell WithNoThrow();
+        IShell UseNoThrow();
 
         /// <summary>
         /// Adds an executable and switches to the executable context.
@@ -140,11 +150,21 @@ namespace Sheller.Models
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
         new TShell WithStandardErrorHandler(Action<string> standardErrorHandler);
+        /// <summary>
+        /// Adds a (user) input request handler to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="inputRequestHandler">
+        /// A <see cref="Func{T}"/> that handles when the shell blocks for user input during an execution.
+        /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
+        /// that will be passed to the executable as StandardInput.
+        /// </param>
+        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
+        new TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TShell"/> that will not throw on a non-zero exit code.</returns>
-        new TShell WithNoThrow();
+        new TShell UseNoThrow();
     }
 }

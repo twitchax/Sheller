@@ -33,6 +33,7 @@ namespace Sheller.Implementations.Shells
         private IEnumerable<string> _standardInputs;
         private IEnumerable<Action<string>> _standardOutputHandlers;
         private IEnumerable<Action<string>> _standardErrorHandlers;
+        private Func<string, string, Task<String>> _inputRequestHandler;
 
         private bool _throws;
 
@@ -50,7 +51,7 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -60,6 +61,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="standardInputs">The standard inputs to pass to the execution.</param>
         /// <param name="standardOutputHandlers">The standard output handlers for capture from the execution.</param>
         /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
+        /// <param name="inputRequestHandler">The request handler from the execution.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
         protected virtual TShell Initialize(
             string shell, 
@@ -67,6 +69,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<string> standardInputs,
             IEnumerable<Action<string>> standardOutputHandlers,
             IEnumerable<Action<string>> standardErrorHandlers,
+            Func<string, string, Task<string>> inputRequestHandler,
             bool? throws)
         {
             _shell = shell;
@@ -76,6 +79,7 @@ namespace Sheller.Implementations.Shells
             _standardInputs = standardInputs ?? new List<string>();
             _standardOutputHandlers = standardOutputHandlers ?? new List<Action<string>>();
             _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
+            _inputRequestHandler = inputRequestHandler;
 
             _throws = throws ?? true;
 
@@ -89,6 +93,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<string> standardInputs = null,
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null,
+            Func<string, string, Task<string>> inputRequestHandler = null,
             bool? throws = null) =>
                 new TShell().Initialize(
                     shell ?? old._shell,
@@ -96,6 +101,7 @@ namespace Sheller.Implementations.Shells
                     standardInputs ?? old._standardInputs,
                     standardOutputHandlers ?? old._standardOutputHandlers,
                     standardErrorHandlers ?? old._standardErrorHandlers,
+                    inputRequestHandler ?? old._inputRequestHandler,
                     throws ?? old._throws
                 );
 
@@ -116,7 +122,8 @@ namespace Sheller.Implementations.Shells
                 commandArguments,
                 _standardInputs,
                 _standardOutputHandlers, 
-                _standardErrorHandlers);
+                _standardErrorHandlers,
+                _inputRequestHandler);
 
             if(_throws && result.ExitCode != 0)
                 throw new ExecutionFailedException($"The execution resulted in a non-zero exit code ({result.ExitCode}).", result);
@@ -181,11 +188,23 @@ namespace Sheller.Implementations.Shells
         IShell IShell.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
 
         /// <summary>
+        /// Adds a (user) input request handler to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="inputRequestHandler">
+        /// A <see cref="Func{T}"/> that handles when the shell blocks for user input during an execution.
+        /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
+        /// that will be passed to the executable as StandardInput.
+        /// </param>
+        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
+        public TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, inputRequestHandler: inputRequestHandler);
+        IShell IShell.UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => UseInputRequestHandler(inputRequestHandler);
+
+        /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TShell"/> that will not throw on a non-zero exit code.</returns>
-        public TShell WithNoThrow() => CreateFrom(this, throws: false);
-        IShell IShell.WithNoThrow() => WithNoThrow();
+        public TShell UseNoThrow() => CreateFrom(this, throws: false);
+        IShell IShell.UseNoThrow() => UseNoThrow();
 
         /// <summary>
         /// Adds an executable and switches to the executable context.

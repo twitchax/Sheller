@@ -35,6 +35,13 @@ namespace Sheller.Models
         IExecutable Clone();
 
         /// <summary>
+        /// Changes the shell of the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="shell">The new <see cref="IShell"/> to use.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the arguments passed to this call.</returns>
+        IExecutable UseShell(IShell shell);
+
+        /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
@@ -46,7 +53,7 @@ namespace Sheller.Models
         /// </summary>
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> with the timeout set to the value passed to this call.</returns>
-        IExecutable WithTimeout(TimeSpan timeout);
+        IExecutable UseTimeout(TimeSpan timeout);
 
         /// <summary>
         /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
@@ -66,6 +73,16 @@ namespace Sheller.Models
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard error handler passed to this call.</returns>
         IExecutable WithStandardErrorHandler(Action<string> standardErrorHandler);
+        /// <summary>
+        /// Adds a (user) input request handler to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="inputRequestHandler">
+        /// A <see cref="Func{T}"/> that handles when the shell blocks for user input during an execution.
+        /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
+        /// that will be passed to the executable as StandardInput.
+        /// </param>
+        /// <returns>A `new` instance of <see cref="IShell"/> with the request handler passed to this call.</returns>
+        IExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
 
         /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.
@@ -78,13 +95,13 @@ namespace Sheller.Models
         /// </summary>
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> with the wait timeout set to the value passed to this call.</returns>
-        IExecutable WithWaitTimeout(TimeSpan timeout);
+        IExecutable UseWaitTimeout(TimeSpan timeout);
 
         /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> that will not throw on a non-zero exit code.</returns>
-        IExecutable WithNoThrow();
+        IExecutable UseNoThrow();
     }
 
     /// <summary>
@@ -100,6 +117,13 @@ namespace Sheller.Models
         new TExecutable Clone();
 
         /// <summary>
+        /// Changes the shell of the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="shell">The new <see cref="IShell"/> to use.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
+        new TExecutable UseShell(IShell shell);
+
+        /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
@@ -111,7 +135,7 @@ namespace Sheller.Models
         /// </summary>
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
-        new TExecutable WithTimeout(TimeSpan timeout);
+        new TExecutable UseTimeout(TimeSpan timeout);
 
         /// <summary>
         /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
@@ -131,6 +155,16 @@ namespace Sheller.Models
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard error handler passed to this call.</returns>
         new TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler);
+        /// <summary>
+        /// Adds a (user) input request handler to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="inputRequestHandler">
+        /// A <see cref="Func{T}"/> that handles when the shell blocks for user input during an execution.
+        /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
+        /// that will be passed to the executable as StandardInput.
+        /// </param>
+        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the request handler passed to this call.</returns>
+        new TExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
 
         /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.
@@ -143,13 +177,13 @@ namespace Sheller.Models
         /// </summary>
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
-        new TExecutable WithWaitTimeout(TimeSpan timeout);
+        new TExecutable UseWaitTimeout(TimeSpan timeout);
 
         /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> that will not throw on a non-zero exit code.</returns>
-        new TExecutable WithNoThrow();
+        new TExecutable UseNoThrow();
     }
 
     /// <summary>

@@ -192,6 +192,14 @@ namespace Sheller.Implementations.Executables
         IExecutable IExecutable.Clone() => Clone();
 
         /// <summary>
+        /// Changes the shell of the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="shell">The new <see cref="IShell"/> to use.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
+        public TExecutable UseShell(IShell shell) => CreateFrom(this, shell: shell);
+        IExecutable IExecutable.UseShell(IShell shell) => UseShell(shell);
+
+        /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
@@ -204,8 +212,8 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
-        public virtual TExecutable WithTimeout(TimeSpan timeout) => CreateFrom(this, timeout: timeout);
-        IExecutable IExecutable.WithTimeout(TimeSpan timeout) => WithTimeout(timeout);
+        public virtual TExecutable UseTimeout(TimeSpan timeout) => CreateFrom(this, timeout: timeout);
+        IExecutable IExecutable.UseTimeout(TimeSpan timeout) => UseTimeout(timeout);
 
         /// <summary>
         /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
@@ -232,6 +240,18 @@ namespace Sheller.Implementations.Executables
         IExecutable IExecutable.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
 
         /// <summary>
+        /// Adds a (user) input request handler to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="inputRequestHandler">
+        /// A <see cref="Func{T}"/> that handles when the shell blocks for user input during an execution.
+        /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
+        /// that will be passed to the executable as StandardInput.
+        /// </param>
+        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the request handler passed to this call.</returns>
+        public TExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, shell: _shell.UseInputRequestHandler(inputRequestHandler));
+        IExecutable IExecutable.UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => UseInputRequestHandler(inputRequestHandler);
+
+        /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="waitFunc">A <see cref="Func{T}"/> which takes an <see cref="ICommandResult"/> and returns a <see cref="Task"/> which will function as wait condition upon the completion of execution.</param>
@@ -244,8 +264,8 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
-        public virtual TExecutable WithWaitTimeout(TimeSpan timeout) => CreateFrom(this, waitTimeout: timeout);
-        IExecutable IExecutable.WithWaitTimeout(TimeSpan timeout) => WithWaitTimeout(timeout);
+        public virtual TExecutable UseWaitTimeout(TimeSpan timeout) => CreateFrom(this, waitTimeout: timeout);
+        IExecutable IExecutable.UseWaitTimeout(TimeSpan timeout) => UseWaitTimeout(timeout);
 
         /// <summary>
         /// Adds a key/value pair (of which there may be many) to the state of this execution context and returns a new context.
@@ -259,7 +279,7 @@ namespace Sheller.Implementations.Executables
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> that will not throw on a non-zero exit code.</returns>
-        public TExecutable WithNoThrow() => CreateFrom(this, shell: _shell.WithNoThrow());
-        IExecutable IExecutable.WithNoThrow() => WithNoThrow();
+        public TExecutable UseNoThrow() => CreateFrom(this, shell: _shell.UseNoThrow());
+        IExecutable IExecutable.UseNoThrow() => UseNoThrow();
     }
 }

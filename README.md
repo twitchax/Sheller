@@ -39,8 +39,8 @@ This library is extendable, but you can run it a few ways depending on how you h
 With no extensions, you would run a command like this.
 
 ```csharp
-var echoResult = await Sheller
-    .Shell("/bin/bash")
+var echoResult = await Sheller.Builder
+    .UseShell("/bin/bash")
         .WithEnvironmentVariable("MY_VAR", "lol")
     .UseExecutable("echo")
         .WithArgument("$MY_VAR")
@@ -54,8 +54,8 @@ var standardError = result.StandardError; // ""
 However, you can build your own custom `IShell` and `IExecutable` implementations that yield code that looks like this (Sheller ships with `Bash` and `Echo` by default).
 
 ```csharp
-var result = await Sheller
-    .Shell<Bash>()
+var result = await Sheller.Builder
+    .UseShell<Bash>()
         .WithEnvironmentVariable("MY_VAR", varValue)
     .UseExecutable<Echo>()
         .WithArgument("$MY_VAR")

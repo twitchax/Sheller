@@ -6,6 +6,12 @@ namespace Sheller.Models
     public interface ICommandResult
     {
         /// <summary>
+        /// Succeeded property.
+        /// </summary>
+        /// <value>The succeeded status of an executable.</value>
+        bool Succeeded { get; }
+
+        /// <summary>
         /// ExitCode property.
         /// </summary>
         /// <value>The exit code of an executable.</value>

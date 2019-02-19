@@ -9,6 +9,12 @@ namespace Sheller.Implementations
     public class CommandResult : ICommandResult
     {
         /// <summary>
+        /// Succeeded property.
+        /// </summary>
+        /// <value>The succeeded status of an executable.</value>
+        public bool Succeeded { get; }
+
+        /// <summary>
         /// ExitCode property.
         /// </summary>
         /// <value>The exit code of an executable.</value>
@@ -29,11 +35,13 @@ namespace Sheller.Implementations
         /// <summary>
         /// The CommandResult constructor.
         /// </summary>
+        /// <param name="succeeded"></param>
         /// <param name="exitCode"></param>
         /// <param name="standardOutput"></param>
         /// <param name="standardError"></param>
-        public CommandResult(int exitCode, string standardOutput, string standardError)
+        public CommandResult(bool succeeded, int exitCode, string standardOutput, string standardError)
         {
+            Succeeded = succeeded;
             ExitCode = exitCode;
             StandardOutput = standardOutput;
             StandardError = standardError;
@@ -55,11 +63,12 @@ namespace Sheller.Implementations
         /// <summary>
         /// The CommandResult constructor.
         /// </summary>
+        /// <param name="succeeded"></param>
         /// <param name="exitCode"></param>
         /// <param name="standardOutput"></param>
         /// <param name="standardError"></param>
         /// <param name="result"></param>
-        public CommandResult(int exitCode, string standardOutput, string standardError, TResult result) : base(exitCode, standardOutput, standardError)
+        public CommandResult(bool succeeded, int exitCode, string standardOutput, string standardError, TResult result) : base(succeeded, exitCode, standardOutput, standardError)
         {
             Result = result;
         }

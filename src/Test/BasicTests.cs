@@ -19,12 +19,14 @@ namespace Sheller.Tests
         {
             var expected = "lol";
 
-            var echoValue = await Sheller
-                .Shell("bash")
+            var echoValue = await Builder
+                .UseShell("bash")
                 .UseExecutable("echo")
                     .WithArgument(expected)
                 .ExecuteAsync();
 
+            Assert.True(echoValue.Succeeded);
+            Assert.Equal(0, echoValue.ExitCode);
             Assert.Equal(expected, echoValue.StandardOutput.Trim());
         }
 
@@ -34,10 +36,24 @@ namespace Sheller.Tests
         {
             var expected = "lol";
 
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument(expected)
+                .ExecuteAsync();
+
+            Assert.Equal(expected, echoValue);
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanExecuteEchoWithSwappedShell()
+        {
+            var expected = "lol";
+            
+            var echoValue = await Builder.UseShell("not_a_shell_lol").UseExecutable<Echo>()
+                .UseShell(Builder.UseShell<Bash>())
+                .WithArgument(expected)
                 .ExecuteAsync();
 
             Assert.Equal(expected, echoValue);
@@ -51,12 +67,14 @@ namespace Sheller.Tests
 
             var exception = await Assert.ThrowsAsync<ExecutionFailedException>(async () =>
             {
-                var echoValue = await Sheller
-                .Shell<Bash>()
+                var echoValue = await Builder
+                .UseShell<Bash>()
                 .UseExecutable("foo")
                 .ExecuteAsync();
             });
 
+            Assert.False(exception.Result.Succeeded);
+            Assert.NotEqual(0, exception.Result.ExitCode);
             Assert.Equal(expected, exception.Result.ExitCode);
         }
 
@@ -66,10 +84,10 @@ namespace Sheller.Tests
         {
             var expected = 127;
 
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                 .UseExecutable("foo")
-                .WithNoThrow()
+                .UseNoThrow()
                 .ExecuteAsync();
 
             Assert.Equal(expected, echoValue.ExitCode);
@@ -81,8 +99,8 @@ namespace Sheller.Tests
         {
             var expected = "lol";
 
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                     .WithEnvironmentVariable("MY_VAR", expected)
                 .UseExecutable<Echo>()
                     .WithArgument("$MY_VAR")
@@ -97,8 +115,8 @@ namespace Sheller.Tests
         {
             var expected = "lol";
 
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                     .WithEnvironmentVariable("MY_VAR", expected)
                 .UseExecutable<Echo>()
                     .WithArgument("\\$MY_VAR")
@@ -117,11 +135,11 @@ namespace Sheller.Tests
             var start = DateTime.Now;
             await Assert.ThrowsAsync<ExecutionTimeoutException>(() =>
             {
-                return Sheller
-                    .Shell<Bash>()
+                return Builder
+                    .UseShell<Bash>()
                     .UseExecutable<Sleep>()
                         .WithArgument(max.ToString())
-                        .WithTimeout(TimeSpan.FromSeconds(min + .1))
+                        .UseTimeout(TimeSpan.FromSeconds(min + .1))
                     .ExecuteAsync();
             });
             var delta = DateTime.Now - start;
@@ -137,8 +155,8 @@ namespace Sheller.Tests
             var expected = "lol";
             var handlerString = new StringBuilder();
 
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                     .WithStandardOutputHandler(s => handlerString.Append(s))
                 .UseExecutable<Echo>()
                     .WithArgument(expected)
@@ -155,8 +173,8 @@ namespace Sheller.Tests
             var expected = "lol";
             var handlerString = new StringBuilder();
 
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument(expected)
                     .WithStandardOutputHandler(s => handlerString.Append(s))
@@ -173,8 +191,8 @@ namespace Sheller.Tests
             var expected = "error";
             var handlerString = new StringBuilder();
 
-            var echoResult = await Sheller
-                .Shell<Bash>()
+            var echoResult = await Builder
+                .UseShell<Bash>()
                 .UseExecutable(">&2 echo")
                     .WithArgument(expected)
                     .WithStandardErrorHandler(s => handlerString.Append(s))
@@ -191,8 +209,8 @@ namespace Sheller.Tests
             var expected1 = "lol";
             var expected2 = "face";
 
-            var echoResult = await Sheller
-                .Shell<Bash>()
+            var echoResult = await Builder
+                .UseShell<Bash>()
                 .UseExecutable("read var1; read var2; echo $var1$var2")
                     .WithStandardInput(expected1)
                     .WithStandardInput(expected2)
@@ -208,8 +226,8 @@ namespace Sheller.Tests
             var expected1 = "lol";
             var expected2 = "face";
 
-            var echoResult = await Sheller
-                .Shell<Bash>()
+            var echoResult = await Builder
+                .UseShell<Bash>()
                 .UseExecutable("read var1; read var2; echo \\$var1\\$var2")
                     .WithStandardInput(expected1)
                     .WithStandardInput(expected2)
@@ -219,13 +237,53 @@ namespace Sheller.Tests
         }
 
         [Fact]
+        [Trait("os", "nix")]
+        public async void CanExecuteEchoWithInputRequestHandlerNix()
+        {
+            var expected1 = "hello";
+            var expected2 = "lol";
+
+            var echoResult = await Builder
+                .UseShell<Bash>()
+                .UseExecutable($"echo {expected1}; read var1; echo $var1")
+                .UseInputRequestHandler((stdout, stderr) =>
+                {
+                    Assert.Contains(expected1, stdout);
+                    return Task.FromResult(expected2);
+                })
+                .ExecuteAsync();
+            
+            Assert.Contains($"{expected2}", echoResult.StandardOutput);
+        }
+
+        [Fact]
+        [Trait("os", "win")]
+        public async void CanExecuteEchoWithInputRequestHandlerWin()
+        {
+            var expected1 = "hello";
+            var expected2 = "lol";
+
+            var echoResult = await Builder
+                .UseShell<Bash>()
+                .UseExecutable($"echo {expected1}; read var1; echo \\$var1")
+                .UseInputRequestHandler((stdout, stderr) =>
+                {
+                    Assert.Contains(expected1, stdout);
+                    return Task.FromResult(expected2);
+                })
+                .ExecuteAsync();
+            
+            Assert.Contains($"{expected2}", echoResult.StandardOutput);
+        }
+
+        [Fact]
         [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithResultSelector()
         {
             var expected = 0;
 
-            var echoErrorCode = await Sheller
-                .Shell<Bash>()
+            var echoErrorCode = await Builder
+                .UseShell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument("dummy")
                 .ExecuteAsync(cr => 
@@ -242,8 +300,8 @@ namespace Sheller.Tests
         {
             var expected = 0;
 
-            var echoErrorCode = await Sheller
-                .Shell<Bash>()
+            var echoErrorCode = await Builder
+                .UseShell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument("dummy")
                 .ExecuteAsync(async cr => 
@@ -262,8 +320,8 @@ namespace Sheller.Tests
             var min = 2;
 
             var start = DateTime.Now;
-            var echoValue = await Sheller
-                .Shell<Bash>()
+            var echoValue = await Builder
+                .UseShell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument("dummy")
                     .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(min - 1)))
@@ -284,13 +342,13 @@ namespace Sheller.Tests
             var start = DateTime.Now;
             await Assert.ThrowsAsync<ExecutionTimeoutException>(() =>
             {
-                return Sheller
-                    .Shell<Bash>()
+                return Builder
+                    .UseShell<Bash>()
                     .UseExecutable<Echo>()
                         .WithArgument("dummy")
                         .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max)))
                         .WithWait(async cr => await Task.Delay(TimeSpan.FromSeconds(max + 1)))
-                        .WithWaitTimeout(TimeSpan.FromSeconds(min))
+                        .UseWaitTimeout(TimeSpan.FromSeconds(min))
                     .ExecuteAsync();
             });
             var delta = DateTime.Now - start;
