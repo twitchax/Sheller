@@ -148,6 +148,8 @@ namespace Sheller
                     });
                 }
 
+                var startTime = DateTime.Now;
+
                 process.Start();
 
                 process.BeginOutputReadLine();
@@ -159,12 +161,14 @@ namespace Sheller
                 
                 process.WaitForExit();
 
+                var endTime = DateTime.Now;
+
                 var succeeded = process.ExitCode == 0;
                 var exitCode = process.ExitCode;
                 var standard = standardOutput.ToString();
                 var error = standardError.ToString();
 
-                return new CommandResult(succeeded, exitCode, standard, error);
+                return new CommandResult(succeeded, exitCode, standard, error, startTime, endTime);
             });
             t.Start();
 

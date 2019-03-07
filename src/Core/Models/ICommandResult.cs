@@ -1,3 +1,5 @@
+using System;
+
 namespace Sheller.Models
 {
     /// <summary>
@@ -28,6 +30,24 @@ namespace Sheller.Models
         /// </summary>
         /// <value>The standard error of an executable.</value>
         string StandardError { get; }
+
+        /// <summary>
+        /// StartTime property.
+        /// </summary>
+        /// <value>The start time of an executable.</value>
+        DateTime StartTime { get; }
+
+        /// <summary>
+        /// EndTime property.
+        /// </summary>
+        /// <value>The end time of an executable.</value>
+        DateTime EndTime { get; }
+
+        /// <summary>
+        /// RunTime property.
+        /// </summary>
+        /// <value>The run time of an executable.</value>
+        TimeSpan RunTime { get; }
     }
 
     /// <summary>
