@@ -35,6 +35,8 @@ namespace Sheller.Implementations.Shells
         private IEnumerable<Action<string>> _standardErrorHandlers;
         private Func<string, string, Task<String>> _inputRequestHandler;
 
+        private ObservableCommandEvent _observableCommandEvent;
+
         private bool _throws;
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -62,6 +64,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="standardOutputHandlers">The standard output handlers for capture from the execution.</param>
         /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
         /// <param name="inputRequestHandler">The request handler from the execution.</param>
+        /// <param name="observableCommandEvent">The observable that fires on stdout/stderr.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
         protected virtual TShell Initialize(
             string shell, 
@@ -70,6 +73,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<Action<string>> standardOutputHandlers,
             IEnumerable<Action<string>> standardErrorHandlers,
             Func<string, string, Task<string>> inputRequestHandler,
+            ObservableCommandEvent observableCommandEvent, 
             bool? throws)
         {
             _shell = shell;
@@ -81,6 +85,8 @@ namespace Sheller.Implementations.Shells
             _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
             _inputRequestHandler = inputRequestHandler;
 
+            _observableCommandEvent = observableCommandEvent ?? new ObservableCommandEvent();
+            
             _throws = throws ?? true;
 
             return this as TShell;
@@ -94,6 +100,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null,
             Func<string, string, Task<string>> inputRequestHandler = null,
+            ObservableCommandEvent observableCommandEvent = null, 
             bool? throws = null) =>
                 new TShell().Initialize(
                     shell ?? old._shell,
@@ -102,6 +109,7 @@ namespace Sheller.Implementations.Shells
                     standardOutputHandlers ?? old._standardOutputHandlers,
                     standardErrorHandlers ?? old._standardErrorHandlers,
                     inputRequestHandler ?? old._inputRequestHandler,
+                    observableCommandEvent ?? old._observableCommandEvent,
                     throws ?? old._throws
                 );
 
@@ -123,10 +131,18 @@ namespace Sheller.Implementations.Shells
                 _standardInputs,
                 _standardOutputHandlers, 
                 _standardErrorHandlers,
-                _inputRequestHandler);
+                _inputRequestHandler,
+                _observableCommandEvent);
 
             if(_throws && result.ExitCode != 0)
-                throw new ExecutionFailedException($"The execution resulted in a non-zero exit code ({result.ExitCode}).", result);
+            {
+                var error = new ExecutionFailedException($"The execution resulted in a non-zero exit code ({result.ExitCode}).", result);
+                _observableCommandEvent.FireError(error);
+                throw error;
+            }
+
+            // TODO: Add a `UseSubscribeComplete` (or something like it) that instructs the observable to complete here.
+            //_observableCommandEvent.FireCompleted();
 
             return result;
         }
@@ -198,6 +214,19 @@ namespace Sheller.Implementations.Shells
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
         public TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, inputRequestHandler: inputRequestHandler);
         IShell IShell.UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => UseInputRequestHandler(inputRequestHandler);
+
+        /// <summary>
+        /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
+        /// The observable never completes, since executions can be run many times.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the subscribers attached to the observable.</returns>
+        public TShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber)
+        {
+            var newObservable = new ObservableCommandEvent();
+            subscriber(newObservable);
+            return CreateFrom(this, observableCommandEvent: ObservableCommandEvent.Merge(_observableCommandEvent, newObservable));
+        }
+        IShell IShell.WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => WithSubscribe(subscriber);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

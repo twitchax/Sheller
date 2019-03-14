@@ -13,7 +13,7 @@ namespace Sheller.Implementations
         /// Succeeded property.
         /// </summary>
         /// <value>The succeeded status of an executable.</value>
-        public bool Succeeded { get; }
+        public bool Succeeded { get; private set; }
 
         /// <summary>
         /// ExitCode property.

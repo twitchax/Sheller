@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations;
+using Sheller.Implementations.Shells;
 using Sheller.Models;
 
 namespace Sheller
@@ -78,6 +79,12 @@ namespace Sheller
             }
         }
 
+        internal static void ForEach<T>(this IEnumerable<T> list, Action<T> functor)
+        {
+            foreach(var item in list)
+                functor(item);
+        }
+
         internal static string EscapeQuotes(this string s) => s.Replace("\"", "\\\"");
 
         internal static Task<ICommandResult> RunCommand(
@@ -86,7 +93,8 @@ namespace Sheller
             IEnumerable<string> standardInputs = null, 
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null,
-            Func<string, string, Task<string>> inputRequestHandler = null)
+            Func<string, string, Task<string>> inputRequestHandler = null,
+            ObservableCommandEvent observableCommandEvent = null)
         {
             var t = new Task<ICommandResult>(() => 
             {
@@ -104,22 +112,28 @@ namespace Sheller
                 
                 process.OutputDataReceived += (s, e) => 
                 {
-                    if(e.Data == null) return;
+                    var data = e.Data;
+                    if(data == null) return;
 
-                    standardOutput.AppendLine(e.Data);
+                    standardOutput.AppendLine(data);
                     if(standardOutputHandlers != null)
                         foreach(var handler in standardOutputHandlers)
-                            handler(e.Data);
+                            handler(data);
+
+                    observableCommandEvent.FireEvent(new CommandEvent(CommandEventType.StandardOutput, data));
                 };
                 
                 process.ErrorDataReceived += (s, e) => 
                 {
-                    if(e.Data == null) return;
+                    var data = e.Data;
+                    if(data == null) return;
 
-                    standardError.AppendLine(e.Data);
+                    standardError.AppendLine(data);
                     if(standardErrorHandlers != null)
                         foreach(var handler in standardErrorHandlers)
-                            handler(e.Data);
+                            handler(data);
+
+                    observableCommandEvent.FireEvent(new CommandEvent(CommandEventType.StandardError, data));
                 };
 
                 if(inputRequestHandler != null)

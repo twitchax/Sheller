@@ -34,7 +34,7 @@ Latest .NET Standard 2.0.
 
 ### Examples
 
-This library is extendable, but you can run it a few ways depending on how you have extended it.
+This library is extendable, but you can run it a few ways depending on how you have extended it.  For more examples, check out the [tests](src/Test/BasicTests.cs).
 
 With no extensions, you would run a command like this.
 

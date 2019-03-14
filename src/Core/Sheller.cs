@@ -5,6 +5,7 @@ using Sheller.Implementations.Shells;
 using Sheller.Models;
 
 // TODO:
+//   * stdout/stderr to memorystream?
 
 namespace Sheller
 {

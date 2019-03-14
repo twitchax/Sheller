@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sheller.Implementations;
 using Sheller.Implementations.Executables;
 using Sheller.Implementations.Shells;
+using Sheller.Models;
 using Xunit;
 
 // NOTE: win tests require WSL...because...lazy.
@@ -355,6 +358,47 @@ namespace Sheller.Tests
 
             Assert.True(delta.TotalSeconds > min);
             Assert.True(delta.TotalSeconds < max);
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanExecuteAndSubscribe()
+        {
+            var events = new List<string>();
+            var expected = "lol";
+
+            var command1 = Builder
+                .UseShell<Bash>()
+                .UseExecutable("echo")
+                .WithArgument(expected)
+                .WithSubscribe(o =>
+                {
+                    o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
+                    {
+                        events.Add(data);
+                    }).Subscribe();
+                });
+
+            var command2 = command1
+                .WithSubscribe(o =>
+                {
+                    o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
+                    {
+                        events.Add(data);
+                    }).Subscribe();
+                });
+
+            await command1
+                .ExecuteAsync();
+
+            await command1
+                .ExecuteAsync();
+
+            await command2
+                .ExecuteAsync();
+            
+            Assert.Equal(4, events.Count);
+            Assert.Contains(expected, events);
         }
     }
 }

@@ -74,6 +74,13 @@ namespace Sheller.Models
         IShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
 
         /// <summary>
+        /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
+        /// The observable never completes, since executions can be run many times.
+        /// </summary>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the subscribers attached to the observable.</returns>
+        IShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
+
+        /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <see cref="IShell"/> that will not throw on a non-zero exit code.</returns>
@@ -160,6 +167,13 @@ namespace Sheller.Models
         /// </param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
         new TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+
+        /// <summary>
+        /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
+        /// The observable never completes, since executions can be run many times.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the subscribers attached to the observable.</returns>
+        new TShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
