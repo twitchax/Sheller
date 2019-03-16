@@ -159,13 +159,13 @@ namespace Sheller.Implementations.Executables
         {
             async Task<TResult> executionTask()
             {
-                var commandResult = await _shell.ExecuteCommandAsync(_executable, _arguments);
+                var commandResult = await _shell.ExecuteCommandAsync(_executable, _arguments).ConfigureAwait(false);
 
-                var result = await resultSelector(commandResult);
+                var result = await resultSelector(commandResult).ConfigureAwait(false);
 
                 // Await (ALL of the wait funcs) OR (the wait timeout), whichever comes first.
                 var waitAllTask = Task.WhenAll(_waitFuncs.Select(f => f(commandResult)));
-                if (await Task.WhenAny(waitAllTask, Task.Delay(_waitTimeout)) != waitAllTask)
+                if (await Task.WhenAny(waitAllTask, Task.Delay(_waitTimeout)).ConfigureAwait(false) != waitAllTask)
                     throw new ExecutionTimeoutException("The wait timeout was reached during the wait block.");
                     
                 return result;
@@ -174,7 +174,7 @@ namespace Sheller.Implementations.Executables
             try
             {
                 var task = executionTask();
-                if (await Task.WhenAny(task, Task.Delay(_timeout)) != task)
+                if (await Task.WhenAny(task, Task.Delay(_timeout)).ConfigureAwait(false) != task)
                     throw new ExecutionTimeoutException("The timeout was reached during execution."); 
 
                 return task.Result;

@@ -143,7 +143,7 @@ namespace Sheller
                     {
                         while(true)
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(1));
+                            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
 
                             if(!process.IsProcessAlive())
                                 continue;
@@ -155,7 +155,7 @@ namespace Sheller
                             {
                                 if (thread.ThreadState == System.Diagnostics.ThreadState.Wait && (thread.WaitReason == ThreadWaitReason.UserRequest || thread.WaitReason == ThreadWaitReason.Unknown /* hack fix for linux: should be more precise */))
                                 {
-                                    process.StandardInput.WriteLine(await inputRequestHandler(standardOutput.ToString(), standardError.ToString()));
+                                    process.StandardInput.WriteLine(await inputRequestHandler(standardOutput.ToString(), standardError.ToString()).ConfigureAwait(false));
                                     break;
                                 }
                             }

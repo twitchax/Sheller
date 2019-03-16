@@ -68,6 +68,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
         /// <param name="inputRequestHandler">The request handler from the execution.</param>
         /// <param name="observableCommandEvent">The observable that fires on stdout/stderr.</param>
+        /// <param name="cancellationTokens">The cancellation tokens for cancelling executions.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
         protected virtual TShell Initialize(
             string shell, 
@@ -141,7 +142,7 @@ namespace Sheller.Implementations.Shells
                 _standardErrorHandlers,
                 _inputRequestHandler,
                 _observableCommandEvent,
-                _cancellationTokens);
+                _cancellationTokens).ConfigureAwait(false);
 
             if(_throws && result.ExitCode != 0)
             {
