@@ -242,7 +242,7 @@ using (var ctSource = new CancellationTokenSource())
     Builder
         .UseShell<Bash>()
         .UseExecutable<Sleep>()
-        .WithArgument("5")
+        .WithArgument("10")
         .WithCancellationToken(ctSource.Token)
         .ExecuteAsync();
 }
