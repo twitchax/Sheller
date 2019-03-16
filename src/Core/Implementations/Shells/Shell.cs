@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations.Executables;
 using Sheller.Models;
@@ -37,6 +38,8 @@ namespace Sheller.Implementations.Shells
 
         private ObservableCommandEvent _observableCommandEvent;
 
+        private IEnumerable<CancellationToken> _cancellationTokens;
+
         private bool _throws;
 
         /// <summary>
@@ -53,7 +56,7 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -74,6 +77,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<Action<string>> standardErrorHandlers,
             Func<string, string, Task<string>> inputRequestHandler,
             ObservableCommandEvent observableCommandEvent, 
+            IEnumerable<CancellationToken> cancellationTokens,
             bool? throws)
         {
             _shell = shell;
@@ -86,6 +90,8 @@ namespace Sheller.Implementations.Shells
             _inputRequestHandler = inputRequestHandler;
 
             _observableCommandEvent = observableCommandEvent ?? new ObservableCommandEvent();
+
+            _cancellationTokens = cancellationTokens ?? new List<CancellationToken>();
             
             _throws = throws ?? true;
 
@@ -101,6 +107,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<Action<string>> standardErrorHandlers = null,
             Func<string, string, Task<string>> inputRequestHandler = null,
             ObservableCommandEvent observableCommandEvent = null, 
+            IEnumerable<CancellationToken> cancellationTokens = null,
             bool? throws = null) =>
                 new TShell().Initialize(
                     shell ?? old._shell,
@@ -110,6 +117,7 @@ namespace Sheller.Implementations.Shells
                     standardErrorHandlers ?? old._standardErrorHandlers,
                     inputRequestHandler ?? old._inputRequestHandler,
                     observableCommandEvent ?? old._observableCommandEvent,
+                    cancellationTokens ?? old._cancellationTokens,
                     throws ?? old._throws
                 );
 
@@ -132,7 +140,8 @@ namespace Sheller.Implementations.Shells
                 _standardOutputHandlers, 
                 _standardErrorHandlers,
                 _inputRequestHandler,
-                _observableCommandEvent);
+                _observableCommandEvent,
+                _cancellationTokens);
 
             if(_throws && result.ExitCode != 0)
             {
@@ -227,6 +236,13 @@ namespace Sheller.Implementations.Shells
             return CreateFrom(this, observableCommandEvent: ObservableCommandEvent.Merge(_observableCommandEvent, newObservable));
         }
         IShell IShell.WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => WithSubscribe(subscriber);
+
+        /// <summary>
+        /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the cancellation token attached.</returns>
+        public TShell WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, cancellationTokens: Helpers.MergeEnumerables(_cancellationTokens, cancellationToken.ToEnumerable()));
+        IShell IShell.WithCancellationToken(CancellationToken cancellationToken) => WithCancellationToken(cancellationToken);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

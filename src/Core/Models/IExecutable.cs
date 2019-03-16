@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sheller.Models
@@ -92,6 +93,12 @@ namespace Sheller.Models
         IExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
 
         /// <summary>
+        /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the cancellation token attached.</returns>
+        IExecutable WithCancellationToken(CancellationToken cancellationToken);
+
+        /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="waitFunc">A <see cref="Func{T}"/> which takes an <see cref="ICommandResult"/> and returns a <see cref="Task"/> which will function as wait condition upon the completion of execution.</param>
@@ -179,6 +186,12 @@ namespace Sheller.Models
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the subscribers attached to the observable.</returns>
         new TExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
+
+        /// <summary>
+        /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the cancellation token attached.</returns>
+        new TExecutable WithCancellationToken(CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.

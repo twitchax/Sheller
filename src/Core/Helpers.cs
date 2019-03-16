@@ -94,7 +94,8 @@ namespace Sheller
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null,
             Func<string, string, Task<string>> inputRequestHandler = null,
-            ObservableCommandEvent observableCommandEvent = null)
+            ObservableCommandEvent observableCommandEvent = null, 
+            IEnumerable<CancellationToken> cancellationTokens = null)
         {
             var t = new Task<ICommandResult>(() => 
             {
@@ -161,6 +162,10 @@ namespace Sheller
                         }
                     });
                 }
+                
+                if(cancellationTokens != null)
+                    foreach(var ct in cancellationTokens)
+                        ct.Register(() => process.Kill());
 
                 var startTime = DateTime.Now;
 

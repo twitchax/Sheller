@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations.Executables;
 
@@ -79,6 +80,12 @@ namespace Sheller.Models
         /// </summary>
         /// <returns>A `new` instance of type <see cref="IShell"/> with the subscribers attached to the observable.</returns>
         IShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
+
+        /// <summary>
+        /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the cancellation token attached.</returns>
+        IShell WithCancellationToken(CancellationToken cancellationToken);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
@@ -174,6 +181,12 @@ namespace Sheller.Models
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the subscribers attached to the observable.</returns>
         new TShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
+
+        /// <summary>
+        /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the cancellation token attached.</returns>
+        new TShell WithCancellationToken(CancellationToken cancellationToken);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

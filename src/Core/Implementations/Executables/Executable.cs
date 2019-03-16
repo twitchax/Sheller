@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Models;
 
@@ -258,6 +259,13 @@ namespace Sheller.Implementations.Executables
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the subscribers attached to the observable.</returns>
         public TExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => CreateFrom(this, shell: _shell.WithSubscribe(subscriber));
         IExecutable IExecutable.WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => WithSubscribe(subscriber);
+
+        /// <summary>
+        /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the cancellation token attached.</returns>
+        public TExecutable WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, shell: _shell.WithCancellationToken(cancellationToken));
+        IExecutable IExecutable.WithCancellationToken(CancellationToken cancellationToken) => WithCancellationToken(cancellationToken);
 
         /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.

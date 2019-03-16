@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations;
 using Sheller.Implementations.Executables;
@@ -399,6 +400,34 @@ namespace Sheller.Tests
             
             Assert.Equal(4, events.Count);
             Assert.Contains(expected, events);
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanExecuteAndCancel()
+        {
+            var min = 2;
+            var max = 4;
+
+            using (var ctSource = new CancellationTokenSource())
+            {
+                ctSource.CancelAfter(TimeSpan.FromSeconds(min + .5));
+                
+                var start = DateTime.Now;
+                await Assert.ThrowsAsync<ExecutionFailedException>(() =>
+                {
+                    return Builder
+                        .UseShell<Bash>()
+                        .UseExecutable<Sleep>()
+                        .WithArgument(max.ToString())
+                        .WithCancellationToken(ctSource.Token)
+                        .ExecuteAsync();
+                });
+                var delta = DateTime.Now - start;
+
+                Assert.True(delta.TotalSeconds > min);
+                Assert.True(delta.TotalSeconds < max);
+            }
         }
     }
 }
