@@ -36,6 +36,14 @@ Latest .NET Standard 2.0.
 
 This library is extendable, but you can run it a few ways depending on how you have extended it.  For more examples, check out the [tests](src/Test/BasicTests.cs).
 
+Just as one would expect from `IEnumerable`, and other fluent interface designs, the result of every call on `IShell` and `IExecutable` is a _new_ instance.  This means that you can reuse useful statements.
+
+In addition, _future_ calls will not affect any previous instances, meaning you can safely chain them without affecting the calling instance.  A good example of this behavior is the fact that `myEnumerable.Where(...)` does not affect `myEnumerable`.
+
+In general `With` methods can be called multiple times (multiple entries are allowed per execution context) and `Use` methods can only be called once (only one entry is allowed per execution context).  The context changes from `IShell` to `IExecutable` upon calling `IShell.UseExecutable`, so the methods available will be different once that method is called.
+
+#### Basic
+
 With no extensions, you would run a command like this.
 
 ```csharp
@@ -49,6 +57,9 @@ var echoResult = await Sheller.Builder
 var exitCode = result.ExitCode; // 0
 var standardOutput = result.StandardOutput; // "lol\n"
 var standardError = result.StandardError; // ""
+var startTime = result.StartTime;
+var endTime = result.EndTime;
+var runTime = result.RunTime;
 ```
 
 However, you can build your own custom `IShell` and `IExecutable` implementations that yield code that looks like this (Sheller ships with `Bash` and `Echo` by default).
@@ -62,6 +73,179 @@ var result = await Sheller.Builder
     .ExecuteAsync();
 
 var echoValue = result; // "lol"
+```
+
+### Reusable Objects
+
+Just like one would expect from `IEnumerable`, and other fluent designs, the result of every call on `IShell` and `IExecutable` is a _new_ instance.  This means that you can reuse useful statements.
+
+In addition, _future_ calls will not affect any previous instances, meaning you can safely chain them without affecting the calling instance.  A good example of this behavior is the fact that `myEnumerable.Where(...)` does not affect `myEnumerable`.
+
+```csharp
+var shell = Builder.UseShell<Bash>().WithEnvironmentVariable("MY_VAR", "cool");
+
+var anotherShell1 = shell.WithEnvironmentVariable("MY_VAR_2", "beans");
+var anotherShell2 = shell.WithEnvironmentVariable("MY_VAR_2", "stuff");
+
+var echoResult1 = anotherShell1.UseExecutable<Echo>().WithArgument("$MY_VAR$MY_VAR_2").ExecuteAsync(); //result: "coolbeans".
+var echoResult2 = anotherShell1.UseExecutable<Echo>().WithArgument("$MY_VAR$MY_VAR_2").ExecuteAsync(); //result: "coolstuff".
+
+```
+
+#### Environment Variables
+
+You can set environment variables on the shell.
+
+```csharp
+var result = await Builder
+    .UseShell<Bash>().WithEnvironmentVariable("MY_VAR", expected)
+    .UseExecutable<Echo>().WithArgument("$MY_VAR")
+    .ExecuteAsync();
+```
+
+#### Standard Output/Error
+
+You can capture standard output and standard error.  These methods can be called multiple times.
+
+```csharp
+await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Echo>()
+        .WithArgument("saythings")
+        .WithStandardOutputHandler(Console.WriteLine)
+        .WithStandardErrorHandler()
+    .ExecuteAsync();
+```
+
+#### Standard Input
+
+You can pass standard input that gets captured during execution.  This method may be called multiple times.
+
+```csharp
+var echoResult = await Builder
+    .UseShell<Bash>()
+    .UseExecutable("read var1; read var2; echo $var1$var2")
+        .WithStandardInput("cool")
+        .WithStandardInput("library")
+    .ExecuteAsync();
+
+// echoResult is "coollibrary".
+```
+
+#### Input Request Handler
+
+You can provide a handler that will be called when execution is blocked and waiting for input.  This can only be set once per execution context.
+
+```csharp
+var echoResult = await Builder
+    .UseShell<Bash>()
+    .UseExecutable($"read var1; echo $var1")
+    .UseInputRequestHandler((stdout, stderr) =>
+    {
+        // Process stdout or stderr, if needed.
+        // Process is blocked, waiting for this input.
+        return Task.FromResult("awesome");
+    })
+    .ExecuteAsync();
+
+// echoResult is "awesome".
+```
+
+#### No Throw
+
+You can instruct the execution to _not_ throw on a non-zero exit code.  This method may only be called once.
+
+```csharp
+await Builder
+    .UseShell<Bash>()
+    .UseExecutable("foo")
+    .UseNoThrow()
+    .ExecuteAsync();
+```
+
+#### Result Selector
+
+You can pass a map function to `ExecuteAsync` to "select" the result.
+
+```csharp
+var echoErrorCode = await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Echo>().WithArgument("dummy")
+    .ExecuteAsync(cr => 
+    {
+        return cr.ExitCode;
+    });
+
+// echoErrorCode is 0.
+```
+
+#### Execution Timeout
+
+You can set the execution timeout.  This method can only be called once.
+
+```csharp
+await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Sleep>()
+        .WithArgument("10")
+        .UseTimeout(TimeSpan.FromSeconds(5))
+    .ExecuteAsync();
+```
+
+#### Post Execution Wait
+
+You can provide waiters that process the result and wait upon a task before completion of the outer task.  These waiters may be applied multiple times.  You can also set a wait timeout (only one) with `UseWaitTimeout`.
+
+```csharp
+var echoValue = await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Echo>()
+        .WithArgument("dummy")
+        .WithWait(async cr => 
+        {
+            return SomethingThatIsATask();
+        })
+        .UseWaitTimeout(TimeSpan.FromSeconds(30))
+    .ExecuteAsync();
+```
+
+#### Reactive
+
+You can subscribe to an internal `IObservable`.  You can call the subscriber multiple times.
+
+```csharp
+var events = new List<string>();
+
+var command1 = Builder
+    .UseShell<Bash>()
+    .UseExecutable("echo")
+    .WithArgument(expected)
+    .WithSubscribe(o =>
+    {
+        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
+        {
+            events.Add(data);
+        }).Subscribe();
+    })
+    .ExecuteAsync();
+```
+
+#### Cancellation
+
+You can set cancellation tokens.  This method may be called multiple times.
+
+```csharp
+using (var ctSource = new CancellationTokenSource())
+{
+    ctSource.CancelAfter(TimeSpan.FromSeconds(5));
+
+    Builder
+        .UseShell<Bash>()
+        .UseExecutable<Sleep>()
+        .WithArgument("5")
+        .WithCancellationToken(ctSource.Token)
+        .ExecuteAsync();
+}
 ```
 
 ## License
