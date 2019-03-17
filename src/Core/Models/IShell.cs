@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations.Executables;
@@ -73,6 +74,18 @@ namespace Sheller.Models
         /// </param>
         /// <returns>A `new` instance of <see cref="IShell"/> with the request handler passed to this call.</returns>
         IShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+        /// <summary>
+        /// Set the Standard Output Encoding on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the standard output encoding passed to this call.</returns>
+        IShell UseStandardOutputEncoding(Encoding standardOutputEncoding);
+        /// <summary>
+        /// Set the Standard Error Encoding on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the standard error encoding passed to this call.</returns>
+        IShell UseStandardErrorEncoding(Encoding standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
@@ -174,6 +187,18 @@ namespace Sheller.Models
         /// </param>
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
         new TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+        /// <summary>
+        /// Set the Standard Output Encoding on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard output encoding passed to this call.</returns>
+        new TShell UseStandardOutputEncoding(Encoding standardOutputEncoding);
+        /// <summary>
+        /// Set the Standard Error Encoding on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard error encoding passed to this call.</returns>
+        new TShell UseStandardErrorEncoding(Encoding standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.

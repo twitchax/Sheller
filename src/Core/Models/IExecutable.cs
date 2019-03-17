@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,6 +85,18 @@ namespace Sheller.Models
         /// </param>
         /// <returns>A `new` instance of <see cref="IShell"/> with the request handler passed to this call.</returns>
         IExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+        /// <summary>
+        /// Set the Standard Output Encoding on the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard output encoding passed to this call.</returns>
+        IExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding);
+        /// <summary>
+        /// Set the Standard Error Encoding on the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard error encoding passed to this call.</returns>
+        IExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
@@ -179,6 +192,18 @@ namespace Sheller.Models
         /// </param>
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the request handler passed to this call.</returns>
         new TExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+        /// <summary>
+        /// Set the Standard Output Encoding on the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard output encoding passed to this call.</returns>
+        new TExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding);
+        /// <summary>
+        /// Set the Standard Error Encoding on the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard error encoding passed to this call.</returns>
+        new TExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.

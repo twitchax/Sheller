@@ -95,7 +95,9 @@ namespace Sheller
             IEnumerable<Action<string>> standardErrorHandlers = null,
             Func<string, string, Task<string>> inputRequestHandler = null,
             ObservableCommandEvent observableCommandEvent = null, 
-            IEnumerable<CancellationToken> cancellationTokens = null)
+            IEnumerable<CancellationToken> cancellationTokens = null,
+            Encoding standardOutputEncoding = null,
+            Encoding standardErrorEncoding = null)
         {
             var t = new Task<ICommandResult>(() => 
             {
@@ -110,6 +112,11 @@ namespace Sheller
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
+
+                if(standardOutputEncoding != null)
+                    process.StartInfo.StandardOutputEncoding = standardOutputEncoding;
+                if(standardErrorEncoding != null)
+                    process.StartInfo.StandardErrorEncoding = standardErrorEncoding;
                 
                 process.OutputDataReceived += (s, e) => 
                 {

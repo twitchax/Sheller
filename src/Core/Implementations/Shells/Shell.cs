@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Implementations.Executables;
@@ -35,6 +36,8 @@ namespace Sheller.Implementations.Shells
         private IEnumerable<Action<string>> _standardOutputHandlers;
         private IEnumerable<Action<string>> _standardErrorHandlers;
         private Func<string, string, Task<String>> _inputRequestHandler;
+        private Encoding _standardOutputEncoding;
+        private Encoding _standardErrorEncoding;
 
         private ObservableCommandEvent _observableCommandEvent;
 
@@ -56,7 +59,7 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -67,6 +70,8 @@ namespace Sheller.Implementations.Shells
         /// <param name="standardOutputHandlers">The standard output handlers for capture from the execution.</param>
         /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
         /// <param name="inputRequestHandler">The request handler from the execution.</param>
+        /// <param name="standardOutputEncoding">The standard output encoding for the execution.</param>
+        /// <param name="standardErrorEncoding">The standard output encoding for the execution.</param>
         /// <param name="observableCommandEvent">The observable that fires on stdout/stderr.</param>
         /// <param name="cancellationTokens">The cancellation tokens for cancelling executions.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
@@ -77,6 +82,8 @@ namespace Sheller.Implementations.Shells
             IEnumerable<Action<string>> standardOutputHandlers,
             IEnumerable<Action<string>> standardErrorHandlers,
             Func<string, string, Task<string>> inputRequestHandler,
+            Encoding standardOutputEncoding,
+            Encoding standardErrorEncoding,
             ObservableCommandEvent observableCommandEvent, 
             IEnumerable<CancellationToken> cancellationTokens,
             bool? throws)
@@ -89,6 +96,8 @@ namespace Sheller.Implementations.Shells
             _standardOutputHandlers = standardOutputHandlers ?? new List<Action<string>>();
             _standardErrorHandlers = standardErrorHandlers ?? new List<Action<string>>();
             _inputRequestHandler = inputRequestHandler;
+            _standardOutputEncoding = standardOutputEncoding;
+            _standardErrorEncoding = standardErrorEncoding;
 
             _observableCommandEvent = observableCommandEvent ?? new ObservableCommandEvent();
 
@@ -107,6 +116,8 @@ namespace Sheller.Implementations.Shells
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null,
             Func<string, string, Task<string>> inputRequestHandler = null,
+            Encoding standardOutputEncoding = null,
+            Encoding standardErrorEncoding = null,
             ObservableCommandEvent observableCommandEvent = null, 
             IEnumerable<CancellationToken> cancellationTokens = null,
             bool? throws = null) =>
@@ -117,6 +128,8 @@ namespace Sheller.Implementations.Shells
                     standardOutputHandlers ?? old._standardOutputHandlers,
                     standardErrorHandlers ?? old._standardErrorHandlers,
                     inputRequestHandler ?? old._inputRequestHandler,
+                    standardOutputEncoding ?? old._standardOutputEncoding,
+                    standardErrorEncoding ?? old._standardErrorEncoding,
                     observableCommandEvent ?? old._observableCommandEvent,
                     cancellationTokens ?? old._cancellationTokens,
                     throws ?? old._throws
@@ -142,7 +155,9 @@ namespace Sheller.Implementations.Shells
                 _standardErrorHandlers,
                 _inputRequestHandler,
                 _observableCommandEvent,
-                _cancellationTokens).ConfigureAwait(false);
+                _cancellationTokens,
+                _standardOutputEncoding,
+                _standardErrorEncoding).ConfigureAwait(false);
 
             if(_throws && result.ExitCode != 0)
             {
@@ -224,6 +239,22 @@ namespace Sheller.Implementations.Shells
         /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
         public TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, inputRequestHandler: inputRequestHandler);
         IShell IShell.UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => UseInputRequestHandler(inputRequestHandler);
+
+        /// <summary>
+        /// Set the Standard Output Encoding on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard output encoding passed to this call.</returns>
+        public TShell UseStandardOutputEncoding(Encoding standardOutputEncoding) => CreateFrom(this, standardOutputEncoding: standardOutputEncoding);
+        IShell IShell.UseStandardOutputEncoding(Encoding standardOutputEncoding) => UseStandardOutputEncoding(standardOutputEncoding);
+
+        /// <summary>
+        /// Set the Standard Error Encoding on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard error encoding passed to this call.</returns>
+        public TShell UseStandardErrorEncoding(Encoding standardErrorEncoding) => CreateFrom(this, standardErrorEncoding: standardErrorEncoding);
+        IShell IShell.UseStandardErrorEncoding(Encoding standardErrorEncoding) => UseStandardErrorEncoding(standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.

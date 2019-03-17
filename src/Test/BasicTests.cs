@@ -429,5 +429,23 @@ namespace Sheller.Tests
                 Assert.True(delta.TotalSeconds < max);
             }
         }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanUseEncoding()
+        {
+            var expected = "AcciÃ³n";
+            byte[] bytes = Encoding.Default.GetBytes(expected);
+            var expectedAscii = Encoding.ASCII.GetString(bytes);
+
+            var echoValue = await Builder
+                .UseShell<Bash>()
+                .UseExecutable<Echo>()
+                    .WithArgument(expected)
+                    .UseStandardOutputEncoding(Encoding.ASCII)
+                .ExecuteAsync();
+
+            Assert.Equal(expectedAscii, echoValue);
+        }
     }
 }

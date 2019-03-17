@@ -248,6 +248,21 @@ using (var ctSource = new CancellationTokenSource())
 }
 ```
 
+#### Character Encoding
+
+You can set the output character encoding.  This method may only be called once.
+
+```csharp
+var echoValue = await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Echo>()
+        .WithArgument("😋")
+        .UseStandardOutputEncoding(Encoding.ASCII)
+    .ExecuteAsync();
+
+// echoValue is "????".
+```
+
 ## License
 
 ```

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Sheller.Models;
@@ -251,6 +252,22 @@ namespace Sheller.Implementations.Executables
         /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the request handler passed to this call.</returns>
         public TExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, shell: _shell.UseInputRequestHandler(inputRequestHandler));
         IExecutable IExecutable.UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => UseInputRequestHandler(inputRequestHandler);
+
+        /// <summary>
+        /// Set the Standard Output Encoding on the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard output encoding passed to this call.</returns>
+        public TExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding) => CreateFrom(this, shell: _shell.UseStandardOutputEncoding(standardOutputEncoding));
+        IExecutable IExecutable.UseStandardOutputEncoding(Encoding standardOutputEncoding) => UseStandardOutputEncoding(standardOutputEncoding);
+
+        /// <summary>
+        /// Set the Standard Error Encoding on the execution context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard error encoding passed to this call.</returns>
+        public TExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding) => CreateFrom(this, shell: _shell.UseStandardErrorEncoding(standardErrorEncoding));
+        IExecutable IExecutable.UseStandardErrorEncoding(Encoding standardErrorEncoding) => UseStandardErrorEncoding(standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
