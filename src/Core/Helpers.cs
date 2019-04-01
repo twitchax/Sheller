@@ -85,7 +85,7 @@ namespace Sheller
                 functor(item);
         }
 
-        internal static string EscapeQuotes(this string s) => s.Replace("\"", "\\\"");
+        internal static string EscapeQuotes(this string s) => s?.Replace("\"", "\\\"");
 
         internal static Task<ICommandResult> RunCommand(
             string command,
