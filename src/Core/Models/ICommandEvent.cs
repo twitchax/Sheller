@@ -32,6 +32,10 @@ namespace Sheller.Models
         /// <summary>
         /// The Standard Error type.
         /// </summary>
-        StandardError
+        StandardError,
+        /// <summary>
+        /// The Standard Error type.
+        /// </summary>
+        Invocation
     }
 }

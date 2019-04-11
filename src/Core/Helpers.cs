@@ -163,6 +163,8 @@ namespace Sheller
                     foreach(var ct in cancellationTokens)
                         ct.Register(() => process.Kill());
 
+                observableCommandEvent.FireEvent(new CommandEvent(CommandEventType.Invocation, $"{command} {args}"));
+
                 var startTime = DateTime.Now;
 
                 process.Start();
