@@ -44,6 +44,14 @@ namespace Sheller.Models
         IExecutable UseShell(IShell shell);
 
         /// <summary>
+        /// Changes the executable of the execution context and returns a `new` context instance.
+        /// This should be used sparingly for very specific use cases (e.g., you renamed `kubectl` to `k`, and you need to reflect that).
+        /// </summary>
+        /// <param name="executable">The new executable to use.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the arguments passed to this call.</returns>
+        IExecutable UseExecutable(string executable);
+
+        /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
@@ -149,6 +157,14 @@ namespace Sheller.Models
         /// <param name="shell">The new <see cref="IShell"/> to use.</param>
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
         new TExecutable UseShell(IShell shell);
+
+        /// <summary>
+        /// Changes the executable of the execution context and returns a `new` context instance.
+        /// This should be used sparingly for very specific use cases (e.g., you renamed `kubectl` to `k`, and you need to reflect that).
+        /// </summary>
+        /// <param name="executable">The new executable to use.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
+        new TExecutable UseExecutable(string executable);
 
         /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.

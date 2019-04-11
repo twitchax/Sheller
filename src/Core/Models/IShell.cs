@@ -101,6 +101,13 @@ namespace Sheller.Models
         IShell WithCancellationToken(CancellationToken cancellationToken);
 
         /// <summary>
+        /// Set a "prefix" string for all commands executed on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="prefix">The prefix for all commands.</param>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the prefix string passed to this call.</returns>
+        IShell UseCommandPrefix(string prefix);
+
+        /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <see cref="IShell"/> that will not throw on a non-zero exit code.</returns>
@@ -212,6 +219,13 @@ namespace Sheller.Models
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the cancellation token attached.</returns>
         new TShell WithCancellationToken(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Set a "prefix" string for all commands executed on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="prefix">The prefix for all commands.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the prefix string passed to this call.</returns>
+        new TShell UseCommandPrefix(string prefix);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

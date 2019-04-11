@@ -447,5 +447,38 @@ namespace Sheller.Tests
 
             Assert.Equal(expectedAscii, echoValue);
         }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanUseExecutableOverride()
+        {
+            var expected = "fun";
+
+            var echo = await Builder
+                .UseShell<Bash>()
+                .UseExecutable("notarealone")
+                    .UseExecutable("echo")
+                    .WithArgument(expected)
+                .ExecuteAsync();
+
+            Assert.Equal(expected, echo.StandardOutput.Trim());
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanUseCommandPrefix()
+        {
+            var prefix = "echo";
+            var expected = "fun";
+
+            var echoValue = await Builder
+                .UseShell<Bash>()
+                    .UseCommandPrefix(prefix)
+                .UseExecutable<Echo>()
+                    .WithArgument(expected)
+                .ExecuteAsync();
+
+            Assert.Equal($"{prefix} {expected}", echoValue);
+        }
     }
 }

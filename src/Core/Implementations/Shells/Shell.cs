@@ -43,6 +43,8 @@ namespace Sheller.Implementations.Shells
 
         private IEnumerable<CancellationToken> _cancellationTokens;
 
+        private string _commandPrefix;
+
         private bool _throws;
 
         /// <summary>
@@ -59,7 +61,7 @@ namespace Sheller.Implementations.Shells
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null);
+        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -74,6 +76,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="standardErrorEncoding">The standard output encoding for the execution.</param>
         /// <param name="observableCommandEvent">The observable that fires on stdout/stderr.</param>
         /// <param name="cancellationTokens">The cancellation tokens for cancelling executions.</param>
+        /// <param name="commandPrefix">The command prefix for all commands executed with this shell.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
         protected virtual TShell Initialize(
             string shell, 
@@ -86,6 +89,7 @@ namespace Sheller.Implementations.Shells
             Encoding standardErrorEncoding,
             ObservableCommandEvent observableCommandEvent, 
             IEnumerable<CancellationToken> cancellationTokens,
+            string commandPrefix,
             bool? throws)
         {
             _shell = shell;
@@ -102,6 +106,8 @@ namespace Sheller.Implementations.Shells
             _observableCommandEvent = observableCommandEvent ?? new ObservableCommandEvent();
 
             _cancellationTokens = cancellationTokens ?? new List<CancellationToken>();
+
+            _commandPrefix = commandPrefix;
             
             _throws = throws ?? true;
 
@@ -120,6 +126,7 @@ namespace Sheller.Implementations.Shells
             Encoding standardErrorEncoding = null,
             ObservableCommandEvent observableCommandEvent = null, 
             IEnumerable<CancellationToken> cancellationTokens = null,
+            string commandPrefix = null,
             bool? throws = null) =>
                 new TShell().Initialize(
                     shell ?? old._shell,
@@ -132,20 +139,21 @@ namespace Sheller.Implementations.Shells
                     standardErrorEncoding ?? old._standardErrorEncoding,
                     observableCommandEvent ?? old._observableCommandEvent,
                     cancellationTokens ?? old._cancellationTokens,
+                    commandPrefix ?? old._commandPrefix,
                     throws ?? old._throws
                 );
 
         /// <summary>
         /// Executes a command and arguments in the specified shell.
         /// </summary>
-        /// <param name="executable">The executable name or path/</param>
+        /// <param name="executable">The executable name or path.</param>
         /// <param name="arguments">The arguments to be passed to the executable (which will be space-separated).</param>
         /// <exception cref="ExecutionFailedException">Thrown when the exit code of the execution is non-zero.</exception>
         /// <returns>A task which results in an <see cref="ICommandResult"/> (i.e., the result of the command execution).</returns>
         public virtual async Task<ICommandResult> ExecuteCommandAsync(string executable, IEnumerable<string> arguments)
         {
             var command = _shell;
-            var commandArguments = this.GetCommandArgument($"{executable} {string.Join(" ", arguments)}");
+            var commandArguments = this.GetCommandArgument($"{_commandPrefix} {executable} {string.Join(" ", arguments)}");
             
             var result = await Helpers.RunCommand(
                 command, 
@@ -275,6 +283,14 @@ namespace Sheller.Implementations.Shells
         /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the cancellation token attached.</returns>
         public TShell WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, cancellationTokens: Helpers.MergeEnumerables(_cancellationTokens, cancellationToken.ToEnumerable()));
         IShell IShell.WithCancellationToken(CancellationToken cancellationToken) => WithCancellationToken(cancellationToken);
+
+        /// <summary>
+        /// Set a "prefix" string for all commands executed on the shell context and returns a `new` context instance.
+        /// </summary>
+        /// <param name="prefix">The prefix for all commands.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the prefix string passed to this call.</returns>
+        public TShell UseCommandPrefix(string prefix) => CreateFrom(this, commandPrefix: prefix);
+        IShell IShell.UseCommandPrefix(string prefix) => UseCommandPrefix(prefix);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

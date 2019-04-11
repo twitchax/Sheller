@@ -37,7 +37,7 @@ namespace Sheller
             {
                 foreach(var kvp in dict)
                 {
-                    result.Add(kvp.Key, kvp.Value);
+                    result[kvp.Key] = kvp.Value;
                 }
             }
 
@@ -50,17 +50,6 @@ namespace Sheller
             {
                 { tuple.Item1, tuple.Item2 }
             };
-        }
-
-        internal static IEnumerable<KeyValuePair<T, R>> MergeDictionaries<T, R>(params IEnumerable<KeyValuePair<T, R>>[] dicts)
-        {
-            foreach(var dict in dicts)
-            {
-                foreach(var kvp in dict)
-                {
-                    yield return kvp;
-                }
-            }
         }
         
         internal static IEnumerable<KeyValuePair<T, R>> ToDictionary<T, R>(this IEnumerable<(T, R)> kvps)

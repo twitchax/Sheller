@@ -160,7 +160,7 @@ namespace Sheller.Implementations.Executables
         {
             async Task<TResult> executionTask()
             {
-                var commandResult = await _shell.ExecuteCommandAsync(_executable, _arguments).ConfigureAwait(false);
+                var commandResult = await _shell.ExecuteCommandAsync($"{_executable}", _arguments).ConfigureAwait(false);
 
                 var result = await resultSelector(commandResult).ConfigureAwait(false);
 
@@ -200,6 +200,15 @@ namespace Sheller.Implementations.Executables
         /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
         public TExecutable UseShell(IShell shell) => CreateFrom(this, shell: shell);
         IExecutable IExecutable.UseShell(IShell shell) => UseShell(shell);
+
+        /// <summary>
+        /// Changes the executable of the execution context and returns a `new` context instance.
+        /// This should be used sparingly for very specific use cases (e.g., you renamed `kubectl` to `k`, and you need to reflect that).
+        /// </summary>
+        /// <param name="executable">The new executable to use.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
+        public TExecutable UseExecutable(string executable) => CreateFrom(this, executable: executable);
+        IExecutable IExecutable.UseExecutable(string executable) => UseExecutable(executable);
 
         /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
