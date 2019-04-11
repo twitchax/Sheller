@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -149,7 +150,27 @@ namespace Sheller
                             
                             foreach(ProcessThread thread in process.Threads)
                             {
-                                if (thread.ThreadState == System.Diagnostics.ThreadState.Wait && (thread.WaitReason == ThreadWaitReason.UserRequest || thread.WaitReason == ThreadWaitReason.Unknown /* hack fix for linux: should be more precise */))
+                                var waitingForUser = false;
+
+                                if(
+                                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                                    thread.ThreadState == System.Diagnostics.ThreadState.Wait &&
+                                    thread.WaitReason == ThreadWaitReason.UserRequest
+                                )
+                                    waitingForUser = true;
+                                else if(
+                                    RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
+                                    thread.ThreadState == System.Diagnostics.ThreadState.Wait &&
+                                    thread.WaitReason == ThreadWaitReason.Unknown
+                                )
+                                    waitingForUser = true;
+                                else if(
+                                    RuntimeInformation.IsOSPlatform(OSPlatform.OSX) &&
+                                    thread.ThreadState == System.Diagnostics.ThreadState.Standby
+                                )
+                                    waitingForUser = true;
+
+                                if (waitingForUser)
                                 {
                                     process.StandardInput.WriteLine(await inputRequestHandler(standardOutput.ToString(), standardError.ToString()).ConfigureAwait(false));
                                     break;
