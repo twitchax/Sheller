@@ -153,7 +153,10 @@ namespace Sheller.Implementations.Shells
         public virtual async Task<ICommandResult> ExecuteCommandAsync(string executable, IEnumerable<string> arguments)
         {
             var command = _shell;
-            var commandArguments = this.GetCommandArgument($"{_commandPrefix} {executable} {string.Join(" ", arguments)}");
+            var commandArguments = 
+                _commandPrefix == null ?
+                this.GetCommandArgument($"{executable} {string.Join(" ", arguments)}") :
+                this.GetCommandArgument($"{_commandPrefix} {executable} {string.Join(" ", arguments)}");
             
             var result = await Helpers.RunCommand(
                 command, 
