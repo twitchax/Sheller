@@ -1,13 +1,31 @@
 
 using System.Linq;
+using Sheller.Models;
 
 namespace Sheller.Implementations.Shells
 {
     /// <summary>
-    /// The executable type for a generic shell.  Note: this assumes the shell is *nixy.
+    /// The interface for a generic shell.  Note: this assumes the shell is *nixy.
     /// </summary>
-    public class GenericShell : ShellBase<GenericShell>
+    public interface IGenericShell : IShell<IGenericShell> {}
+
+    /// <summary>
+    /// The type for a generic shell.  Note: this assumes the shell is *nixy.
+    /// </summary>
+    public class GenericShell : Shell<IGenericShell>, IGenericShell
     {
+        /// <summary>
+        /// Creates a new instance of the <see cref="GenericShell"/> type.
+        /// </summary>
+        /// <returns>The instance.</returns>
+        protected override Shell<IGenericShell> Create() => new GenericShell(null);
+
+        /// <summary>
+        /// <cref see="GenericShell"/> is a special case that cannot be initialized without a shell name.
+        /// </summary>
+        /// <param name="shell">The name or path of the shell.</param>       
+        public GenericShell(string shell) : base(shell) {}
+
         /// <summary>
         /// Builds the arguments that should be passed to the shell based on the shell's type.
         /// </summary>

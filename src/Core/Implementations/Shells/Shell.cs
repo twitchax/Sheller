@@ -11,22 +11,10 @@ using Sheller.Models;
 namespace Sheller.Implementations.Shells
 {
     /// <summary>
-    /// The implementation base class for well-known shells (i.e., defines its own shell string).
-    /// </summary>
-    /// <typeparam name="TShell">The type of the shell class implementing this interface.</typeparam>
-    public abstract class Shell<TShell> : ShellBase<TShell> where TShell : Shell<TShell>, new()
-    {
-        /// <summary>
-        /// Initializes the shell.
-        /// </summary>
-        public abstract TShell Initialize();
-    }
-
-    /// <summary>
     /// The implementation base class for shells.
     /// </summary>
     /// <typeparam name="TShell">The type of the shell class implementing this interface.</typeparam>
-    public abstract class ShellBase<TShell> : IShell<TShell> where TShell : ShellBase<TShell>, new()
+    public abstract class Shell<TShell> : IShell<TShell> where TShell : IShell<TShell>
     {
         private string _shell;
 
@@ -50,18 +38,39 @@ namespace Sheller.Implementations.Shells
         /// <summary>
         /// The <see cref="Path"/> property.
         /// </summary>
-        public virtual string Path => _shell;
+        public string Path => _shell;
 
         /// <summary>
         /// The <see cref="EnvironmentVariables"/> property.
         /// </summary>
-        public virtual IEnumerable<KeyValuePair<string, string>> EnvironmentVariables => _environmentVariables;
+        public IEnumerable<KeyValuePair<string, string>> EnvironmentVariables => _environmentVariables;
+
+        /// <summary>
+        /// Allows a <see cref="Shell{TShell}"/> to be implicitly convertible to <typeparamref name="TShell"/>.
+        /// </summary>
+        /// <param name="shell">The concrete <see cref="Shell{TShell}"/>.</param>
+        public static implicit operator TShell(Shell<TShell> shell) => (TShell)shell;
+
+        /// <summary>
+        /// Allows an implementer of <see cref="Shell{TShell}"/>
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Shell<TShell> Create();
+
+        /// <summary>
+        /// The <cref see="Shell"/> constructor.
+        /// </summary>
+        /// <param name="shell">The name or path of the shell.</param>        
+        public Shell(string shell)
+        {
+            _shell = shell;
+        }
 
         /// <summary>
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null);
+        //public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -78,7 +87,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="cancellationTokens">The cancellation tokens for cancelling executions.</param>
         /// <param name="commandPrefix">The command prefix for all commands executed with this shell.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
-        protected virtual TShell Initialize(
+        private TShell Initialize(
             string shell, 
             IEnumerable<KeyValuePair<string, string>> environmentVariables,
             IEnumerable<string> standardInputs,
@@ -111,11 +120,11 @@ namespace Sheller.Implementations.Shells
             
             _throws = throws ?? true;
 
-            return this as TShell;
+            return this;
         }
 
         private static TShell CreateFrom(
-            ShellBase<TShell> old,
+            Shell<TShell> old,
             string shell = null, 
             IEnumerable<KeyValuePair<string, string>> environmentVariables = null,
             IEnumerable<string> standardInputs = null,
@@ -128,7 +137,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<CancellationToken> cancellationTokens = null,
             string commandPrefix = null,
             bool? throws = null) =>
-                new TShell().Initialize(
+                old.Create().Initialize(
                     shell ?? old._shell,
                     environmentVariables ?? old._environmentVariables,
                     standardInputs ?? old._standardInputs,
