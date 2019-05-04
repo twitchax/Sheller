@@ -10,40 +10,18 @@ using Sheller.Models;
 namespace Sheller.Implementations.Executables
 {
     /// <summary>
-    /// The implementation base class for well-known executables (i.e., defines its own executable string) with a custom result.
-    /// </summary>
-    /// <typeparam name="TExecutable">The type of the executable class implementing this interface.</typeparam>
-    /// <typeparam name="TResult">The result type of the executable.</typeparam>
-    public abstract class Executable<TExecutable, TResult> : Executable<TExecutable>, IExecutable<TExecutable, TResult> where TExecutable : Executable<TExecutable, TResult>, new()
-    {
-        /// <summary>
-        /// Executes the executable.
-        /// </summary>
-        /// <returns>A task which results in a <typeparamref name="TResult"/> (i.e., the result of the execution).</returns>
-        public abstract new Task<TResult> ExecuteAsync();
-    }
-
-    /// <summary>
-    /// The implementation base class for well-known executables (i.e., defines its own executable string).
-    /// </summary>
-    /// <typeparam name="TExecutable">The type of the executable class implementing this interface.</typeparam>
-    public abstract class Executable<TExecutable> : ExecutableBase<TExecutable> where TExecutable : Executable<TExecutable>, new()
-    {
-        /// <summary>
-        /// Initializes this instance with the provided shell.
-        /// </summary>
-        /// <param name="shell">The shell in which the executable should run.</param>
-        /// <returns>This instance.</returns>
-        public abstract TExecutable Initialize(IShell shell);
-    }
-
-    /// <summary>
     /// The implementation base class for generic executables with a custom result.
     /// </summary>
-    /// <typeparam name="TExecutable">The type of the executable class implementing this interface.</typeparam>
+    /// <typeparam name="TIExecutable">The type of the executable interface implementing this interface.</typeparam>
     /// <typeparam name="TResult">The result type of the executable.</typeparam>
-    public abstract class ExecutableBase<TExecutable, TResult> : ExecutableBase<TExecutable>, IExecutable<TExecutable, TResult> where TExecutable : ExecutableBase<TExecutable, TResult>, new()
+    public abstract class Executable<TIExecutable, TResult> : Executable<TIExecutable>, IExecutable<TIExecutable, TResult> where TIExecutable : IExecutable
     {
+        /// <summary>
+        /// Initializes the shell.
+        /// </summary>
+        /// <param name="executable">The name or path of the executable to run.</param>
+        public Executable(string executable) : base(executable) {}
+
         /// <summary>
         /// Executes the executable.
         /// </summary>
@@ -54,8 +32,8 @@ namespace Sheller.Implementations.Executables
     /// <summary>
     /// The implementation base class for generic executables.
     /// </summary>
-    /// <typeparam name="TExecutable">The type of the executable class implementing this interface.</typeparam>
-    public abstract class ExecutableBase<TExecutable> : IExecutable<TExecutable> where TExecutable : ExecutableBase<TExecutable>, new()
+    /// <typeparam name="TIExecutable">The type of the executable class implementing this interface.</typeparam>
+    public abstract class Executable<TIExecutable> : IExecutable<TIExecutable> where TIExecutable : IExecutable
     {
         private string _executable;
         private IShell _shell;
@@ -75,12 +53,35 @@ namespace Sheller.Implementations.Executables
         protected IDictionary<string, object> State => _state;
 
         /// <summary>
+        /// The path to the executable.
+        /// </summary>
+        protected string Path => _executable;
+
+        /// <summary>
+        /// The <cref see="Shell"/> to which this executable instance is attached.
+        /// </summary>
+        protected IShell Shell => _shell;
+
+        /// <summary>
+        /// Initializes the shell.
+        /// </summary>
+        /// <param name="executable">The name or path of the executable to run.</param>
+        /// <param name="shell">The shell in which the executable should run.</param>
+        public Executable(string executable) => this.Initialize(executable);
+
+        /// <summary>
+        /// Allows an implementer of <see cref="Executable{TIExecutable}"/>
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Executable<TIExecutable> Create();
+
+        /// <summary>
         /// Initializes this instance with the provided shell.
         /// </summary>
         /// <param name="executable">The name or path of the executable to run.</param>
         /// <param name="shell">The shell in which the executable should run.</param>
         /// <returns>This instance.</returns>
-        public TExecutable Initialize(string executable, IShell shell) => Initialize(executable, shell, null, null, null, null, null);
+        private IExecutable Initialize(string executable) => Initialize(executable, null, null, null, null, null, null);
         
         /// <summary>
         /// Initializes this instance with the provided shell.
@@ -93,7 +94,7 @@ namespace Sheller.Implementations.Executables
         /// <param name="waitTimeout">The timeout of the wait functions.</param>
         /// <param name="state">The subclass "state" of the execution context.</param>
         /// <returns>This instance.</returns>
-        protected virtual TExecutable Initialize(
+        private IExecutable Initialize(
             string executable, 
             IShell shell, 
             IEnumerable<string> arguments,
@@ -102,8 +103,8 @@ namespace Sheller.Implementations.Executables
             TimeSpan? waitTimeout,
             IDictionary<string, object> state)
         {
-            _executable = executable ?? throw new InvalidOperationException("This executable definition does not define an executable.");;
-            _shell = shell?.Clone() ?? throw new InvalidOperationException("This executable definition does not define a shell.");;
+            _executable = executable ?? throw new InvalidOperationException("This executable definition does not define an executable.");
+            _shell = shell?.Clone();
 
             _arguments = arguments ?? new List<String>();
 
@@ -114,11 +115,11 @@ namespace Sheller.Implementations.Executables
 
             _state = state ?? new Dictionary<string, object>();
 
-            return this as TExecutable;
+            return this;
         }
 
-        private static TExecutable CreateFrom(
-            ExecutableBase<TExecutable> old,
+        private static TIExecutable CreateFrom(
+            Executable<TIExecutable> old,
             string executable = null, 
             IShell shell = null, 
             IEnumerable<string> arguments = null,
@@ -126,7 +127,7 @@ namespace Sheller.Implementations.Executables
             IEnumerable<Func<ICommandResult, Task>> waitFuncs = null, 
             TimeSpan? waitTimeout = null,
             IDictionary<string, object> state = null) =>
-                new TExecutable().Initialize(
+                (TIExecutable)old.Create().Initialize(
                     executable ?? old._executable,
                     shell ?? old._shell,
                     arguments ?? old._arguments,
@@ -158,6 +159,9 @@ namespace Sheller.Implementations.Executables
         /// <returns>A task which results in a <typeparamref name="TResult"/> (i.e., the result of the execution).</returns>
         public async virtual Task<TResult> ExecuteAsync<TResult>(Func<ICommandResult, Task<TResult>> resultSelector)
         {
+            if(this._shell == null)
+                throw new InvalidOperationException("This executable definition does not define a shell.  Please attach this definition to a shell or call `UseShell`.");
+            
             async Task<TResult> executionTask()
             {
                 var commandResult = await _shell.ExecuteCommandAsync($"{_executable}", _arguments).ConfigureAwait(false);
@@ -189,16 +193,16 @@ namespace Sheller.Implementations.Executables
         /// <summary>
         /// Clones this instance.
         /// </summary>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the same settings as the invoking instance.</returns>
-        public virtual TExecutable Clone() => CreateFrom(this);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the same settings as the invoking instance.</returns>
+        public virtual TIExecutable Clone() => CreateFrom(this);
         IExecutable IExecutable.Clone() => Clone();
 
         /// <summary>
         /// Changes the shell of the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="shell">The new <see cref="IShell"/> to use.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        public TExecutable UseShell(IShell shell) => CreateFrom(this, shell: shell);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
+        public TIExecutable UseShell(IShell shell) => CreateFrom(this, shell: shell.Clone());
         IExecutable IExecutable.UseShell(IShell shell) => UseShell(shell);
 
         /// <summary>
@@ -206,48 +210,48 @@ namespace Sheller.Implementations.Executables
         /// This should be used sparingly for very specific use cases (e.g., you renamed `kubectl` to `k`, and you need to reflect that).
         /// </summary>
         /// <param name="executable">The new executable to use.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        public TExecutable UseExecutable(string executable) => CreateFrom(this, executable: executable);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
+        public TIExecutable UseExecutable(string executable) => CreateFrom(this, executable: executable);
         IExecutable IExecutable.UseExecutable(string executable) => UseExecutable(executable);
 
         /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        public virtual TExecutable WithArgument(params string[] args) => CreateFrom(this, arguments: Helpers.MergeEnumerables(_arguments, args));
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
+        public virtual TIExecutable WithArgument(params string[] args) => CreateFrom(this, arguments: Helpers.MergeEnumerables(_arguments, args));
         IExecutable IExecutable.WithArgument(params string[] args) => WithArgument(args);
 
         /// <summary>
         /// Sets the timeout on the entire execution of this entire execution context.
         /// </summary>
         /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
-        public virtual TExecutable UseTimeout(TimeSpan timeout) => CreateFrom(this, timeout: timeout);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the timeout set to the value passed to this call.</returns>
+        public virtual TIExecutable UseTimeout(TimeSpan timeout) => CreateFrom(this, timeout: timeout);
         IExecutable IExecutable.UseTimeout(TimeSpan timeout) => UseTimeout(timeout);
 
         /// <summary>
         /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard input passed to this call.</returns>
-        public TExecutable WithStandardInput(string standardInput) => CreateFrom(this, shell: _shell.WithStandardInput(standardInput));
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the standard input passed to this call.</returns>
+        public TIExecutable WithStandardInput(string standardInput) => CreateFrom(this, shell: _shell.WithStandardInput(standardInput));
         IExecutable IExecutable.WithStandardInput(string standardInput) => WithStandardInput(standardInput);
 
         /// <summary>
         /// Adds a standard output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard output handler passed to this call.</returns>
-        public virtual TExecutable WithStandardOutputHandler(Action<string> standardOutputHandler) => CreateFrom(this, shell: _shell.WithStandardOutputHandler(standardOutputHandler));
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the standard output handler passed to this call.</returns>
+        public virtual TIExecutable WithStandardOutputHandler(Action<string> standardOutputHandler) => CreateFrom(this, shell: _shell.WithStandardOutputHandler(standardOutputHandler));
         IExecutable IExecutable.WithStandardOutputHandler(Action<string> standardOutputHandler) => WithStandardOutputHandler(standardOutputHandler);
 
         /// <summary>
         /// Adds an error output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard error handler passed to this call.</returns>
-        public virtual TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler) => CreateFrom(this, shell: _shell.WithStandardErrorHandler(standardErrorHandler));
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the standard error handler passed to this call.</returns>
+        public virtual TIExecutable WithStandardErrorHandler(Action<string> standardErrorHandler) => CreateFrom(this, shell: _shell.WithStandardErrorHandler(standardErrorHandler));
         IExecutable IExecutable.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
 
         /// <summary>
@@ -258,8 +262,8 @@ namespace Sheller.Implementations.Executables
         /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
         /// that will be passed to the executable as StandardInput.
         /// </param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the request handler passed to this call.</returns>
-        public TExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, shell: _shell.UseInputRequestHandler(inputRequestHandler));
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the request handler passed to this call.</returns>
+        public TIExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => CreateFrom(this, shell: _shell.UseInputRequestHandler(inputRequestHandler));
         IExecutable IExecutable.UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler) => UseInputRequestHandler(inputRequestHandler);
 
         /// <summary>
@@ -267,7 +271,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard output encoding passed to this call.</returns>
-        public TExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding) => CreateFrom(this, shell: _shell.UseStandardOutputEncoding(standardOutputEncoding));
+        public TIExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding) => CreateFrom(this, shell: _shell.UseStandardOutputEncoding(standardOutputEncoding));
         IExecutable IExecutable.UseStandardOutputEncoding(Encoding standardOutputEncoding) => UseStandardOutputEncoding(standardOutputEncoding);
 
         /// <summary>
@@ -275,38 +279,38 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> with the standard error encoding passed to this call.</returns>
-        public TExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding) => CreateFrom(this, shell: _shell.UseStandardErrorEncoding(standardErrorEncoding));
+        public TIExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding) => CreateFrom(this, shell: _shell.UseStandardErrorEncoding(standardErrorEncoding));
         IExecutable IExecutable.UseStandardErrorEncoding(Encoding standardErrorEncoding) => UseStandardErrorEncoding(standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
         /// The observable never completes, since executions can be run many times.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the subscribers attached to the observable.</returns>
-        public TExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => CreateFrom(this, shell: _shell.WithSubscribe(subscriber));
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the subscribers attached to the observable.</returns>
+        public TIExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => CreateFrom(this, shell: _shell.WithSubscribe(subscriber));
         IExecutable IExecutable.WithSubscribe(Action<IObservable<ICommandEvent>> subscriber) => WithSubscribe(subscriber);
 
         /// <summary>
         /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the cancellation token attached.</returns>
-        public TExecutable WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, shell: _shell.WithCancellationToken(cancellationToken));
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the cancellation token attached.</returns>
+        public TIExecutable WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, shell: _shell.WithCancellationToken(cancellationToken));
         IExecutable IExecutable.WithCancellationToken(CancellationToken cancellationToken) => WithCancellationToken(cancellationToken);
 
         /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="waitFunc">A <see cref="Func{T}"/> which takes an <see cref="ICommandResult"/> and returns a <see cref="Task"/> which will function as wait condition upon the completion of execution.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait func passed to this call.</returns>
-        public virtual TExecutable WithWait(Func<ICommandResult, Task> waitFunc) => CreateFrom(this, waitFuncs: Helpers.MergeEnumerables(_waitFuncs, waitFunc.ToEnumerable()));
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the wait func passed to this call.</returns>
+        public virtual TIExecutable WithWait(Func<ICommandResult, Task> waitFunc) => CreateFrom(this, waitFuncs: Helpers.MergeEnumerables(_waitFuncs, waitFunc.ToEnumerable()));
         IExecutable IExecutable.WithWait(Func<ICommandResult, Task> waitFunc) => WithWait(waitFunc);
 
         /// <summary>
         /// Sets the wait timeout on the <see cref="WithWait"/> <see cref="Func{T}"/>.
         /// </summary>
         /// <param name="timeout">The timeout.  The default value is ten (10) minutes.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
-        public virtual TExecutable UseWaitTimeout(TimeSpan timeout) => CreateFrom(this, waitTimeout: timeout);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the wait timeout set to the value passed to this call.</returns>
+        public virtual TIExecutable UseWaitTimeout(TimeSpan timeout) => CreateFrom(this, waitTimeout: timeout);
         IExecutable IExecutable.UseWaitTimeout(TimeSpan timeout) => UseWaitTimeout(timeout);
 
         /// <summary>
@@ -314,14 +318,14 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the state values passed to this call.</returns>
-        protected virtual TExecutable WithState(string key, object value) => CreateFrom(this, state: Helpers.MergeDictionaries(_state, (key, value).ToDictionary()));
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the state values passed to this call.</returns>
+        protected virtual TIExecutable WithState(string key, object value) => CreateFrom(this, state: Helpers.MergeDictionaries(_state, (key, value).ToDictionary()));
 
         /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> that will not throw on a non-zero exit code.</returns>
-        public TExecutable UseNoThrow() => CreateFrom(this, shell: _shell.UseNoThrow());
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> that will not throw on a non-zero exit code.</returns>
+        public TIExecutable UseNoThrow() => CreateFrom(this, shell: _shell.UseNoThrow());
         IExecutable IExecutable.UseNoThrow() => UseNoThrow();
     }
 }

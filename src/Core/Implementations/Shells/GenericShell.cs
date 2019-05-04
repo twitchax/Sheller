@@ -18,7 +18,7 @@ namespace Sheller.Implementations.Shells
         /// Creates a new instance of the <see cref="GenericShell"/> type.
         /// </summary>
         /// <returns>The instance.</returns>
-        protected override Shell<IGenericShell> Create() => new GenericShell(null);
+        protected override Shell<IGenericShell> Create() => new GenericShell(this.Path);
 
         /// <summary>
         /// <cref see="GenericShell"/> is a special case that cannot be initialized without a shell name.

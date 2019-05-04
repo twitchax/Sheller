@@ -118,13 +118,13 @@ namespace Sheller.Models
         /// </summary>
         /// <typeparam name="TExecutable">The type of the executable to use.</typeparam>
         /// <returns>An instance of <typeparamref name="TExecutable"/> passed to this call.</returns>
-        TExecutable UseExecutable<TExecutable>() where TExecutable : Executable<TExecutable>, new();
+        TExecutable UseExecutable<TExecutable>() where TExecutable : IExecutable, new();
         /// <summary>
         /// Adds an executable and switches to the executable context.
         /// </summary>
         /// <param name="exe">The name or path of the executable.</param>
         /// <returns>An instance of <see cref="GenericExe"/> which represents the executable name or path passed to this call.</returns>
-        GenericExe UseExecutable(string exe);
+        IExecutable UseExecutable(string exe);
         
         /// <summary>
         /// Builds the arguments that should be passed to the shell based on the shell's type.
@@ -137,53 +137,53 @@ namespace Sheller.Models
     /// <summary>
     /// The interface for defining a shell.
     /// </summary>
-    /// <typeparam name="TShell">The type of the shell class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
-    public interface IShell<out TShell> : IShell where TShell : IShell
+    /// <typeparam name="TIShell">The type of the shell class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
+    public interface IShell<out TIShell> : IShell where TIShell : IShell
     {
         /// <summary>
         /// Clones this instance.
         /// </summary>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the same settings as the invoking instance.</returns>
-        new TShell Clone();
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the same settings as the invoking instance.</returns>
+        new TIShell Clone();
 
         /// <summary>
         /// Adds an environment variable (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="key">The environment variable key.</param>
         /// <param name="value">The environment variable value.</param>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variable passed in this call.</returns>
-        new TShell WithEnvironmentVariable(string key, string value);
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the environment variable passed in this call.</returns>
+        new TIShell WithEnvironmentVariable(string key, string value);
         /// <summary>
         /// Adds a list of environment variables (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="variables">The list of key value pairs of environment variables.</param>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variables passed in this call.</returns>
-        new TShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables);
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the environment variables passed in this call.</returns>
+        new TIShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables);
         /// <summary>
         /// Adds a list of environment variables (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="variables">The list of tuple of environment variables.</param>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the environment variables passed in this call.</returns>
-        new TShell WithEnvironmentVariables(IEnumerable<(string, string)> variables);
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the environment variables passed in this call.</returns>
+        new TIShell WithEnvironmentVariables(IEnumerable<(string, string)> variables);
 
         /// <summary>
         /// Adds a string to the standard input stream (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard input passed to this call.</returns>
-        new TShell WithStandardInput(string standardInput);
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the standard input passed to this call.</returns>
+        new TIShell WithStandardInput(string standardInput);
         /// <summary>
         /// Adds a standard output handler (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard output handler passed to this call.</returns>
-        new TShell WithStandardOutputHandler(Action<string> standardOutputHandler);
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the standard output handler passed to this call.</returns>
+        new TIShell WithStandardOutputHandler(Action<string> standardOutputHandler);
         /// <summary>
         /// Adds an error output handler (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
-        new TShell WithStandardErrorHandler(Action<string> standardErrorHandler);
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the standard error handler passed to this call.</returns>
+        new TIShell WithStandardErrorHandler(Action<string> standardErrorHandler);
         /// <summary>
         /// Adds a (user) input request handler to the shell context and returns a `new` context instance.
         /// </summary>
@@ -192,45 +192,45 @@ namespace Sheller.Models
         /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
         /// that will be passed to the executable as StandardInput.
         /// </param>
-        /// <returns>A `new` instance of <typeparamref name="TShell"/> with the standard error handler passed to this call.</returns>
-        new TShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+        /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the standard error handler passed to this call.</returns>
+        new TIShell UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
         /// <summary>
         /// Set the Standard Output Encoding on the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard output encoding passed to this call.</returns>
-        new TShell UseStandardOutputEncoding(Encoding standardOutputEncoding);
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the standard output encoding passed to this call.</returns>
+        new TIShell UseStandardOutputEncoding(Encoding standardOutputEncoding);
         /// <summary>
         /// Set the Standard Error Encoding on the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the standard error encoding passed to this call.</returns>
-        new TShell UseStandardErrorEncoding(Encoding standardErrorEncoding);
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the standard error encoding passed to this call.</returns>
+        new TIShell UseStandardErrorEncoding(Encoding standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
         /// The observable never completes, since executions can be run many times.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the subscribers attached to the observable.</returns>
-        new TShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the subscribers attached to the observable.</returns>
+        new TIShell WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
 
         /// <summary>
         /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the cancellation token attached.</returns>
-        new TShell WithCancellationToken(CancellationToken cancellationToken);
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the cancellation token attached.</returns>
+        new TIShell WithCancellationToken(CancellationToken cancellationToken);
 
         /// <summary>
         /// Set a "prefix" string for all commands executed on the shell context and returns a `new` context instance.
         /// </summary>
         /// <param name="prefix">The prefix for all commands.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> with the prefix string passed to this call.</returns>
-        new TShell UseCommandPrefix(string prefix);
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the prefix string passed to this call.</returns>
+        new TIShell UseCommandPrefix(string prefix);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TShell"/> that will not throw on a non-zero exit code.</returns>
-        new TShell UseNoThrow();
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> that will not throw on a non-zero exit code.</returns>
+        new TIShell UseNoThrow();
     }
 }
