@@ -138,7 +138,7 @@ namespace Sheller.Models
     /// The interface for defining a shell.
     /// </summary>
     /// <typeparam name="TShell">The type of the shell class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
-    public interface IShell<out TShell> : IShell where TShell : IShell<TShell>
+    public interface IShell<out TShell> : IShell where TShell : IShell
     {
         /// <summary>
         /// Clones this instance.

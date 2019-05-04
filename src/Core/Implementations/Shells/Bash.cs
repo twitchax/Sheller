@@ -1,4 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Sheller.Implementations.Executables;
 using Sheller.Models;
 
 namespace Sheller.Implementations.Shells
@@ -6,7 +12,7 @@ namespace Sheller.Implementations.Shells
     /// <summary>
     /// The shell interface for `bash`.
     /// </summary>
-    public interface IBash : IShell<IBash> {}
+    public interface IBash : IShell {}
 
     /// <summary>
     /// The shell type for `bash`.

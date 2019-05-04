@@ -14,7 +14,7 @@ namespace Sheller.Implementations.Shells
     /// The implementation base class for shells.
     /// </summary>
     /// <typeparam name="TShell">The type of the shell class implementing this interface.</typeparam>
-    public abstract class Shell<TShell> : IShell<TShell> where TShell : IShell<TShell>
+    public abstract class Shell<TShell> : IShell<TShell> where TShell : IShell
     {
         private string _shell;
 
@@ -46,12 +46,6 @@ namespace Sheller.Implementations.Shells
         public IEnumerable<KeyValuePair<string, string>> EnvironmentVariables => _environmentVariables;
 
         /// <summary>
-        /// Allows a <see cref="Shell{TShell}"/> to be implicitly convertible to <typeparamref name="TShell"/>.
-        /// </summary>
-        /// <param name="shell">The concrete <see cref="Shell{TShell}"/>.</param>
-        public static implicit operator TShell(Shell<TShell> shell) => (TShell)shell;
-
-        /// <summary>
         /// Allows an implementer of <see cref="Shell{TShell}"/>
         /// </summary>
         /// <returns></returns>
@@ -63,14 +57,14 @@ namespace Sheller.Implementations.Shells
         /// <param name="shell">The name or path of the shell.</param>        
         public Shell(string shell)
         {
-            _shell = shell;
+            this.Initialize(shell);
         }
 
         /// <summary>
         /// Initializes the shell.
         /// </summary>
         /// <param name="shell">The name or path of the shell.</param>
-        //public virtual TShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null);
+        private IShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null);
 
         /// <summary>
         /// Initializes the shell.
@@ -87,7 +81,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="cancellationTokens">The cancellation tokens for cancelling executions.</param>
         /// <param name="commandPrefix">The command prefix for all commands executed with this shell.</param>
         /// <param name="throws">Indicates that a non-zero exit code throws.</param>
-        private TShell Initialize(
+        private IShell Initialize(
             string shell, 
             IEnumerable<KeyValuePair<string, string>> environmentVariables,
             IEnumerable<string> standardInputs,
@@ -137,7 +131,7 @@ namespace Sheller.Implementations.Shells
             IEnumerable<CancellationToken> cancellationTokens = null,
             string commandPrefix = null,
             bool? throws = null) =>
-                old.Create().Initialize(
+                (TShell)old.Create().Initialize(
                     shell ?? old._shell,
                     environmentVariables ?? old._environmentVariables,
                     standardInputs ?? old._standardInputs,
