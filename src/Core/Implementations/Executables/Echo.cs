@@ -14,13 +14,13 @@ namespace Sheller.Implementations.Executables
     public class Echo : Executable<IEcho, string>, IEcho
     {
         /// <summary>
-        /// Creates a new instance of the <see cref="Sleep"/> type.
+        /// Creates a new instance of the <see cref="Echo"/> type.
         /// </summary>
         /// <returns>The instance.</returns>
         protected override Executable<IEcho> Create() => new Echo();
 
         /// <summary>
-        /// The <cref see="Sleep"/> constructor.
+        /// The <cref see="Echo"/> constructor.
         /// </summary>
         public Echo() : base("echo") {}
 

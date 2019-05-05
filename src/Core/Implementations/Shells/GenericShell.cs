@@ -10,7 +10,7 @@ namespace Sheller.Implementations.Shells
     public interface IGenericShell : IShell {}
 
     /// <summary>
-    /// The type for a generic shell.  Note: this assumes the shell is *nixy.
+    /// The type for a generic shell.
     /// </summary>
     public class GenericShell : Shell<IGenericShell>, IGenericShell
     {
