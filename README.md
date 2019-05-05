@@ -295,7 +295,9 @@ public interface IKubectl : IExecutable
 
 public class Kubectl : Executable<IKubectl>, IKubectl
 {
+    // Allows the `Executable` base class to "create and clone" a new instance for chanining.
     protected override Executable<IKubectl> Create() => new Kubectl();
+    // Sets the underlying executable of this executable type.
     public Kubectl() : base("kubectl") {}
     
     public IKubectl WithKubeConfig(string configPath) => this.WithArgument($"--kubeconfig={configPath}");
