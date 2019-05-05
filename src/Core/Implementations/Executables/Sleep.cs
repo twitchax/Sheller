@@ -4,15 +4,24 @@ using Sheller.Models;
 namespace Sheller.Implementations.Executables
 {
     /// <summary>
+    /// The interface for `sleep`.
+    /// </summary>
+    public interface ISleep : IExecutable {}
+
+    /// <summary>
     /// The executable type for `sleep`.
     /// </summary>
-    public class Sleep : Executable<Sleep>
+    public class Sleep : Executable<ISleep>, ISleep
     {
         /// <summary>
-        /// Initializes this instance with the provided shell.
+        /// Creates a new instance of the <see cref="Sleep"/> type.
         /// </summary>
-        /// <param name="shell">The shell in which the executable should run.</param>
-        /// <returns>This instance.</returns>
-        public override Sleep Initialize(IShell shell) => this.Initialize("sleep", shell);
+        /// <returns>The instance.</returns>
+        protected override Executable<ISleep> Create() => new Sleep();
+
+        /// <summary>
+        /// The <cref see="Sleep"/> constructor.
+        /// </summary>
+        public Sleep() : base("sleep") {}
     }
 }

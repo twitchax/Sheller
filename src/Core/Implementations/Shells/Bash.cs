@@ -1,17 +1,34 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Sheller.Implementations.Executables;
+using Sheller.Models;
 
 namespace Sheller.Implementations.Shells
 {
     /// <summary>
+    /// The shell interface for `bash`.
+    /// </summary>
+    public interface IBash : IShell {}
+
+    /// <summary>
     /// The shell type for `bash`.
     /// </summary>
-    public class Bash : Shell<Bash>
+    public class Bash : Shell<IBash>, IBash
     {
         /// <summary>
-        /// Instantiates a <see cref="Bash"/> instance.
+        /// Creates a new instance of the <see cref="Bash"/> type.
         /// </summary>
         /// <returns>The instance.</returns>
-        public override Bash Initialize() => Initialize("bash");
+        protected override Shell<IBash> Create() => new Bash();
+
+        /// <summary>
+        /// The <cref see="Bash"/> constructor.
+        /// </summary>
+        public Bash() : base("bash") {}
 
         /// <summary>
         /// Builds the arguments that should be passed to the shell based on the shell's type.

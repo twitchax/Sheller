@@ -142,62 +142,62 @@ namespace Sheller.Models
     /// <summary>
     /// A top-level interface for executables.
     /// </summary>
-    /// <typeparam name="TExecutable">The type of the executable class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
-    public interface IExecutable<out TExecutable> : IExecutable where TExecutable : IExecutable<TExecutable>
+    /// <typeparam name="TIExecutable">The type of the executable class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
+    public interface IExecutable<out TIExecutable> : IExecutable where TIExecutable : IExecutable
     {
         /// <summary>
         /// Clones this instance.
         /// </summary>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the same settings as the invoking instance.</returns>
-        new TExecutable Clone();
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the same settings as the invoking instance.</returns>
+        new TIExecutable Clone();
 
         /// <summary>
         /// Changes the shell of the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="shell">The new <see cref="IShell"/> to use.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        new TExecutable UseShell(IShell shell);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
+        new TIExecutable UseShell(IShell shell);
 
         /// <summary>
         /// Changes the executable of the execution context and returns a `new` context instance.
         /// This should be used sparingly for very specific use cases (e.g., you renamed `kubectl` to `k`, and you need to reflect that).
         /// </summary>
         /// <param name="executable">The new executable to use.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        new TExecutable UseExecutable(string executable);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
+        new TIExecutable UseExecutable(string executable);
 
         /// <summary>
         /// Adds an argument (which are appended space-separated to the execution command) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the arguments passed to this call.</returns>
-        new TExecutable WithArgument(params string[] args);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
+        new TIExecutable WithArgument(params string[] args);
 
         /// <summary>
         /// Sets the timeout on the entire execution of this entire execution context.
         /// </summary>
         /// <param name="timeout">The timeout.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the timeout set to the value passed to this call.</returns>
-        new TExecutable UseTimeout(TimeSpan timeout);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the timeout set to the value passed to this call.</returns>
+        new TIExecutable UseTimeout(TimeSpan timeout);
 
         /// <summary>
         /// Adds a string to the standard input stream (of which there may be many) to the executable context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardInput">A string that gets passed to the standard input stream of the executable.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard input passed to this call.</returns>
-        new TExecutable WithStandardInput(string standardInput);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the standard input passed to this call.</returns>
+        new TIExecutable WithStandardInput(string standardInput);
         /// <summary>
         /// Adds a standard output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard output handler passed to this call.</returns>
-        new TExecutable WithStandardOutputHandler(Action<string> standardOutputHandler);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the standard output handler passed to this call.</returns>
+        new TIExecutable WithStandardOutputHandler(Action<string> standardOutputHandler);
         /// <summary>
         /// Adds an error output handler (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the standard error handler passed to this call.</returns>
-        new TExecutable WithStandardErrorHandler(Action<string> standardErrorHandler);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the standard error handler passed to this call.</returns>
+        new TIExecutable WithStandardErrorHandler(Action<string> standardErrorHandler);
         /// <summary>
         /// Adds a (user) input request handler to the execution context and returns a `new` context instance.
         /// </summary>
@@ -206,60 +206,60 @@ namespace Sheller.Models
         /// This handler should take (string StandardOutput, string StandardInput) and return a <see cref="Task{String}"/>
         /// that will be passed to the executable as StandardInput.
         /// </param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the request handler passed to this call.</returns>
-        new TExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the request handler passed to this call.</returns>
+        new TIExecutable UseInputRequestHandler(Func<string, string, Task<string>> inputRequestHandler);
         /// <summary>
         /// Set the Standard Output Encoding on the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardOutputEncoding">The encoding to use for standard output.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard output encoding passed to this call.</returns>
-        new TExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the standard output encoding passed to this call.</returns>
+        new TIExecutable UseStandardOutputEncoding(Encoding standardOutputEncoding);
         /// <summary>
         /// Set the Standard Error Encoding on the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="standardErrorEncoding">The encoding to use for standard error.</param>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the standard error encoding passed to this call.</returns>
-        new TExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the standard error encoding passed to this call.</returns>
+        new TIExecutable UseStandardErrorEncoding(Encoding standardErrorEncoding);
 
         /// <summary>
         /// Provides an <see cref="IObservable{T}"/> to which a subscription can be placed.
         /// The observable never completes, since executions can be run many times.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the subscribers attached to the observable.</returns>
-        new TExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the subscribers attached to the observable.</returns>
+        new TIExecutable WithSubscribe(Action<IObservable<ICommandEvent>> subscriber);
 
         /// <summary>
         /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> with the cancellation token attached.</returns>
-        new TExecutable WithCancellationToken(CancellationToken cancellationToken);
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the cancellation token attached.</returns>
+        new TIExecutable WithCancellationToken(CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds a wait <see cref="Func{T}"/> (of which there may be many) to the execution context and returns a `new` context instance.
         /// </summary>
         /// <param name="waitFunc">A <see cref="Func{T}"/> which takes an <see cref="ICommandResult"/> and returns a <see cref="Task"/> which will function as wait condition upon the completion of execution.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait func passed to this call.</returns>
-        new TExecutable WithWait(Func<ICommandResult, Task> waitFunc);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the wait func passed to this call.</returns>
+        new TIExecutable WithWait(Func<ICommandResult, Task> waitFunc);
         /// <summary>
         /// Sets the wait timeout on the <see cref="WithWait"/> <see cref="Func{T}"/>.
         /// </summary>
         /// <param name="timeout">The timeout.</param>
-        /// <returns>A `new` instance of <typeparamref name="TExecutable"/> with the wait timeout set to the value passed to this call.</returns>
-        new TExecutable UseWaitTimeout(TimeSpan timeout);
+        /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the wait timeout set to the value passed to this call.</returns>
+        new TIExecutable UseWaitTimeout(TimeSpan timeout);
 
         /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
-        /// <returns>A `new` instance of type <typeparamref name="TExecutable"/> that will not throw on a non-zero exit code.</returns>
-        new TExecutable UseNoThrow();
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> that will not throw on a non-zero exit code.</returns>
+        new TIExecutable UseNoThrow();
     }
 
     /// <summary>
     /// An interface for executables that define the execute method with a special result type.
     /// </summary>
-    /// <typeparam name="TExecutable">The type of the executable class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
+    /// <typeparam name="TIExecutable">The type of the executable class implementing this interface.  This allows the base class to return `new` instances for daisy chaining.</typeparam>
     /// <typeparam name="TResult">The result type of the executable.</typeparam>
-    public interface IExecutable<out TExecutable, TResult> : IExecutable<TExecutable> where TExecutable : IExecutable<TExecutable>
+    public interface IExecutable<out TIExecutable, TResult> : IExecutable<TIExecutable> where TIExecutable : IExecutable
     {
         /// <summary>
         /// Executes the executable.
