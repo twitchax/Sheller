@@ -78,7 +78,7 @@ var result = await Sheller.Builder
 var echoValue = result; // "lol"
 ```
 
-### Reusable Objects
+#### Reusable Objects
 
 Just like one would expect from `IEnumerable`, and other fluent designs, the result of every call on `IShell` and `IExecutable` is a _new_ instance.  This means that you can reuse useful statements.
 
@@ -279,6 +279,36 @@ var echoValue = await Builder
         {
             si.WorkingDirectory = "/";
         })
+    .ExecuteAsync();
+```
+
+#### Roll Your Own
+
+You can also roll your own `IShell` and `IExecutable` plugins.  For example, it would be nice to implement a `kubectl` wrapper.
+
+```csharp
+public interface IKubectl : IExecutable
+{
+    IKubectl WithKubeConfig(string configPath);
+    IKubectl WithApply(string yamlPath);
+}
+
+public class Kubectl : Executable<IKubectl>, IKubectl
+{
+    protected override Executable<IKubectl> Create() => new Kubectl();
+    public Kubectl() : base("kubectl") {}
+    
+    public IKubectl WithKubeConfig(string configPath) => this.WithArgument($"--kubeconfig={configPath}");
+    public IKubectl WithApply(string yamlPath) => this.WithArgument("apply", "-f", yamlPath);
+}
+
+...
+
+var result = await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Kubectl>()
+        .WithKubeConfig("kube_config.yaml")
+        .WithApply("my_app.yaml")
     .ExecuteAsync();
 ```
 
