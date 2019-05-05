@@ -66,7 +66,6 @@ namespace Sheller.Implementations.Executables
         /// Initializes the shell.
         /// </summary>
         /// <param name="executable">The name or path of the executable to run.</param>
-        /// <param name="shell">The shell in which the executable should run.</param>
         public Executable(string executable) => this.Initialize(executable);
 
         /// <summary>
@@ -79,7 +78,6 @@ namespace Sheller.Implementations.Executables
         /// Initializes this instance with the provided shell.
         /// </summary>
         /// <param name="executable">The name or path of the executable to run.</param>
-        /// <param name="shell">The shell in which the executable should run.</param>
         /// <returns>This instance.</returns>
         private IExecutable Initialize(string executable) => Initialize(executable, null, null, null, null, null, null);
         

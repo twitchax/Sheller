@@ -116,9 +116,9 @@ namespace Sheller.Models
         /// <summary>
         /// Adds an executable and switches to the executable context.
         /// </summary>
-        /// <typeparam name="TExecutable">The type of the executable to use.</typeparam>
-        /// <returns>An instance of <typeparamref name="TExecutable"/> passed to this call.</returns>
-        TExecutable UseExecutable<TExecutable>() where TExecutable : IExecutable, new();
+        /// <typeparam name="TIExecutable">The type of the executable to use.</typeparam>
+        /// <returns>An instance of <typeparamref name="TIExecutable"/> passed to this call.</returns>
+        TIExecutable UseExecutable<TIExecutable>() where TIExecutable : IExecutable, new();
         /// <summary>
         /// Adds an executable and switches to the executable context.
         /// </summary>
