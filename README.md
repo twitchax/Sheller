@@ -1,6 +1,9 @@
 # Sheller
 
-[![Build Status](https://travis-ci.org/twitchax/Sheller.svg?branch=master)](https://travis-ci.org/twitchax/Sheller)
+[![GitHub Actions Status](https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/badge/twitchax/sheller)](https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/results/twitchax/sheller)
+[![GitHub Release](https://img.shields.io/github/release/twitchax/sheller.svg)](https://github.com/twitchax/Sheller/releases)
+[![NuGet Version](https://img.shields.io/nuget/v/Sheller.svg)](https://www.nuget.org/packages/Sheller/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Sheller.svg)](https://www.nuget.org/packages/Sheller/)
 
 A .NET library that makes shelling out commands super easy and fluent.  Think of it as a way to build human-readable shell scripts with the power of a full programming language.
 
