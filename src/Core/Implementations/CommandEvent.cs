@@ -1,5 +1,3 @@
-
-using System;
 using Sheller.Models;
 
 namespace Sheller.Implementations

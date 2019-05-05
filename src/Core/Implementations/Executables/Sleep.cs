@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Sheller.Models;
 
 namespace Sheller.Implementations.Executables

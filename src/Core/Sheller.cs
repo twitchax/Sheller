@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using Sheller.Implementations;
-using Sheller.Implementations.Shells;
+﻿using Sheller.Implementations.Shells;
 using Sheller.Models;
 
 // TODO:
