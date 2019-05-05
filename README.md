@@ -263,6 +263,22 @@ var echoValue = await Builder
 // echoValue is "????".
 ```
 
+#### `StartInfo` Transform
+
+You can arbitrarily change any options on the `StartInfo` of the process.  This method may only be called once.
+
+```csharp
+var echoValue = await Builder
+    .UseShell<Bash>()
+    .UseExecutable<Echo>()
+        .WithArgument(expected)
+        .UseStartInfoTransform(si => 
+        {
+            si.WorkingDirectory = "/";
+        })
+    .ExecuteAsync();
+```
+
 ## License
 
 ```

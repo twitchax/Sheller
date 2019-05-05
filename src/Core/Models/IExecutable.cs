@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -133,6 +134,13 @@ namespace Sheller.Models
         IExecutable UseWaitTimeout(TimeSpan timeout);
 
         /// <summary>
+        /// Set a transform function on the <cref see="ProcessStartInfo"/> that is applied before execution, and returns a `new` context instance.
+        /// </summary>
+        /// <param name="startInfoTransform">The transform.</param>
+        /// <returns>A `new` instance of type <see cref="IExecutable"/> with the transform passed to this call.</returns>
+        IExecutable UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform);
+
+        /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <see cref="IExecutable"/> that will not throw on a non-zero exit code.</returns>
@@ -246,6 +254,13 @@ namespace Sheller.Models
         /// <param name="timeout">The timeout.</param>
         /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the wait timeout set to the value passed to this call.</returns>
         new TIExecutable UseWaitTimeout(TimeSpan timeout);
+
+        /// <summary>
+        /// Set a transform function on the <cref see="ProcessStartInfo"/> that is applied before execution, and returns a `new` context instance.
+        /// </summary>
+        /// <param name="startInfoTransform">The transform.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the transform passed to this call.</returns>
+        new TIExecutable UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform);
 
         /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,8 @@ namespace Sheller.Implementations.Shells
 
         private string _commandPrefix;
 
+        private Action<ProcessStartInfo> _startInfoTransform;
+
         private bool _throws;
 
         /// <summary>
@@ -54,28 +57,9 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <returns></returns>
         protected abstract Shell<TIShell> Create();
+        
+        private IShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null, null);
 
-        /// <summary>
-        /// Initializes the shell.
-        /// </summary>
-        /// <param name="shell">The name or path of the shell.</param>
-        private IShell Initialize(string shell) => Initialize(shell, null, null, null, null, null, null, null, null, null, null, null);
-
-        /// <summary>
-        /// Initializes the shell.
-        /// </summary>
-        /// <param name="shell">The name or path of the shell.</param>
-        /// <param name="environmentVariables">The environment variables to set on any executions in this shell.</param>
-        /// <param name="standardInputs">The standard inputs to pass to the execution.</param>
-        /// <param name="standardOutputHandlers">The standard output handlers for capture from the execution.</param>
-        /// <param name="standardErrorHandlers">The standard error handlers for capture from the execution.</param>
-        /// <param name="inputRequestHandler">The request handler from the execution.</param>
-        /// <param name="standardOutputEncoding">The standard output encoding for the execution.</param>
-        /// <param name="standardErrorEncoding">The standard output encoding for the execution.</param>
-        /// <param name="observableCommandEvent">The observable that fires on stdout/stderr.</param>
-        /// <param name="cancellationTokens">The cancellation tokens for cancelling executions.</param>
-        /// <param name="commandPrefix">The command prefix for all commands executed with this shell.</param>
-        /// <param name="throws">Indicates that a non-zero exit code throws.</param>
         private IShell Initialize(
             string shell, 
             IEnumerable<KeyValuePair<string, string>> environmentVariables,
@@ -88,6 +72,7 @@ namespace Sheller.Implementations.Shells
             ObservableCommandEvent observableCommandEvent, 
             IEnumerable<CancellationToken> cancellationTokens,
             string commandPrefix,
+            Action<ProcessStartInfo> startInfoTransform,
             bool? throws)
         {
             _shell = shell ?? throw new InvalidOperationException("This shell definition does not define a shell.");;
@@ -106,6 +91,8 @@ namespace Sheller.Implementations.Shells
             _cancellationTokens = cancellationTokens ?? new List<CancellationToken>();
 
             _commandPrefix = commandPrefix;
+
+            _startInfoTransform = startInfoTransform;
             
             _throws = throws ?? true;
 
@@ -125,6 +112,7 @@ namespace Sheller.Implementations.Shells
             ObservableCommandEvent observableCommandEvent = null, 
             IEnumerable<CancellationToken> cancellationTokens = null,
             string commandPrefix = null,
+            Action<ProcessStartInfo> startInfoTransform = null,
             bool? throws = null) =>
                 (TIShell)old.Create().Initialize(
                     shell ?? old._shell,
@@ -138,6 +126,7 @@ namespace Sheller.Implementations.Shells
                     observableCommandEvent ?? old._observableCommandEvent,
                     cancellationTokens ?? old._cancellationTokens,
                     commandPrefix ?? old._commandPrefix,
+                    startInfoTransform ?? old._startInfoTransform,
                     throws ?? old._throws
                 );
 
@@ -166,7 +155,8 @@ namespace Sheller.Implementations.Shells
                 _observableCommandEvent,
                 _cancellationTokens,
                 _standardOutputEncoding,
-                _standardErrorEncoding).ConfigureAwait(false);
+                _standardErrorEncoding,
+                _startInfoTransform).ConfigureAwait(false);
 
             if(_throws && result.ExitCode != 0)
             {
@@ -292,6 +282,14 @@ namespace Sheller.Implementations.Shells
         /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the prefix string passed to this call.</returns>
         public TIShell UseCommandPrefix(string prefix) => CreateFrom(this, commandPrefix: prefix);
         IShell IShell.UseCommandPrefix(string prefix) => UseCommandPrefix(prefix);
+
+        /// <summary>
+        /// Set a transform function on the <cref see="ProcessStartInfo"/> that is applied before execution, and returns a `new` context instance.
+        /// </summary>
+        /// <param name="startInfoTransform">The transform.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the transform passed to this call.</returns>
+        public TIShell UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform) => CreateFrom(this, startInfoTransform: startInfoTransform);
+        IShell IShell.UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform) => UseStartInfoTransform(startInfoTransform);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

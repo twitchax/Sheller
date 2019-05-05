@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,6 +107,13 @@ namespace Sheller.Models
         /// <param name="prefix">The prefix for all commands.</param>
         /// <returns>A `new` instance of type <see cref="IShell"/> with the prefix string passed to this call.</returns>
         IShell UseCommandPrefix(string prefix);
+
+        /// <summary>
+        /// Set a transform function on the <cref see="ProcessStartInfo"/> that is applied before execution, and returns a `new` context instance.
+        /// </summary>
+        /// <param name="startInfoTransform">The transform.</param>
+        /// <returns>A `new` instance of type <see cref="IShell"/> with the transform passed to this call.</returns>
+        IShell UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.
@@ -226,6 +234,13 @@ namespace Sheller.Models
         /// <param name="prefix">The prefix for all commands.</param>
         /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the prefix string passed to this call.</returns>
         new TIShell UseCommandPrefix(string prefix);
+
+        /// <summary>
+        /// Set a transform function on the <cref see="ProcessStartInfo"/> that is applied before execution, and returns a `new` context instance.
+        /// </summary>
+        /// <param name="startInfoTransform">The transform.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the transform passed to this call.</returns>
+        new TIShell UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform);
 
         /// <summary>
         /// Ensures the shell context will not throw on a non-zero exit code and returns a `new` context instance.

@@ -85,7 +85,8 @@ namespace Sheller
             ObservableCommandEvent observableCommandEvent = null, 
             IEnumerable<CancellationToken> cancellationTokens = null,
             Encoding standardOutputEncoding = null,
-            Encoding standardErrorEncoding = null)
+            Encoding standardErrorEncoding = null,
+            Action<ProcessStartInfo> startInfoTransform = null)
         {
             var t = new Task<ICommandResult>(() => 
             {
@@ -105,6 +106,8 @@ namespace Sheller
                     process.StartInfo.StandardOutputEncoding = standardOutputEncoding;
                 if(standardErrorEncoding != null)
                     process.StartInfo.StandardErrorEncoding = standardErrorEncoding;
+
+                startInfoTransform?.Invoke(process.StartInfo);
                 
                 process.OutputDataReceived += (s, e) => 
                 {

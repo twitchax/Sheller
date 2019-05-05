@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
@@ -478,6 +479,24 @@ namespace Sheller.Tests
                 .ExecuteAsync();
 
             Assert.Equal($"{prefix} {expected}", echoValue);
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanExecuteWithStartInfoTransform()
+        {
+            var expected = "cool";
+
+            var echoValue = await Builder
+                .UseShell<Bash>()
+                .UseExecutable("dummy")
+                    .UseStartInfoTransform(si => 
+                    {
+                        (si as ProcessStartInfo).Arguments = $"-c \"echo {expected}\";";
+                    })
+                .ExecuteAsync();
+
+            Assert.Equal(expected, echoValue.StandardOutput.Trim());
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -73,24 +74,8 @@ namespace Sheller.Implementations.Executables
         /// <returns></returns>
         protected abstract Executable<TIExecutable> Create();
 
-        /// <summary>
-        /// Initializes this instance with the provided shell.
-        /// </summary>
-        /// <param name="executable">The name or path of the executable to run.</param>
-        /// <returns>This instance.</returns>
         private IExecutable Initialize(string executable) => Initialize(executable, null, null, null, null, null, null);
         
-        /// <summary>
-        /// Initializes this instance with the provided shell.
-        /// </summary>
-        /// <param name="executable">The name or path of the executable to run.</param>
-        /// <param name="shell">The shell in which the executable should run.</param>
-        /// <param name="arguments">The arguments to pass to the executable.</param>
-        /// <param name="timeout">The timeout of the execution.</param>
-        /// <param name="waitFuncs">The wait functions which block execution after the executable execution.</param>
-        /// <param name="waitTimeout">The timeout of the wait functions.</param>
-        /// <param name="state">The subclass "state" of the execution context.</param>
-        /// <returns>This instance.</returns>
         private IExecutable Initialize(
             string executable, 
             IShell shell, 
@@ -317,6 +302,14 @@ namespace Sheller.Implementations.Executables
         /// <param name="value">The value.</param>
         /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the state values passed to this call.</returns>
         protected virtual TIExecutable WithState(string key, object value) => CreateFrom(this, state: Helpers.MergeDictionaries(_state, (key, value).ToDictionary()));
+
+        /// <summary>
+        /// Set a transform function on the <cref see="ProcessStartInfo"/> that is applied before execution, and returns a `new` context instance.
+        /// </summary>
+        /// <param name="startInfoTransform">The transform.</param>
+        /// <returns>A `new` instance of type <typeparamref name="TIExecutable"/> with the transform passed to this call.</returns>
+        public TIExecutable UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform) => CreateFrom(this, shell: _shell.UseStartInfoTransform(startInfoTransform));
+        IExecutable IExecutable.UseStartInfoTransform(Action<ProcessStartInfo> startInfoTransform) => UseStartInfoTransform(startInfoTransform);
 
         /// <summary>
         /// Ensures the execution context will not throw on a non-zero exit code and returns a `new` context instance.
