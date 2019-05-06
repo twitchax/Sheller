@@ -13,22 +13,6 @@ namespace Sheller
 {
     internal static class Helpers
     {
-        internal static IEnumerable<T> MergeEnumerables<T>(params IEnumerable<T>[] lists)
-        {
-            foreach(var list in lists)
-            {
-                foreach(var item in list)
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        internal static IEnumerable<T> ToEnumerable<T>(this T obj)
-        {
-            yield return obj;
-        }
-
         internal static IDictionary<T, R> MergeDictionaries<T, R>(params IDictionary<T, R>[] dicts)
         {
             var result = new Dictionary<T, R>();
@@ -50,7 +34,7 @@ namespace Sheller
                 { tuple.Item1, tuple.Item2 }
             };
         }
-        
+
         internal static IEnumerable<KeyValuePair<T, R>> ToDictionary<T, R>(this IEnumerable<(T, R)> kvps)
         {
             foreach(var kvp in kvps)
@@ -58,7 +42,7 @@ namespace Sheller
                 yield return new KeyValuePair<T, R>(kvp.Item1, kvp.Item2);
             }
         }
-        
+
         internal static void CopyToStringDictionary(this IEnumerable<KeyValuePair<string, string>> kvps, StringDictionary dict)
         {
             foreach(var kvp in kvps)
@@ -78,22 +62,22 @@ namespace Sheller
         internal static Task<ICommandResult> RunCommand(
             string command,
             string args = null,
-            IEnumerable<string> standardInputs = null, 
+            IEnumerable<string> standardInputs = null,
             IEnumerable<Action<string>> standardOutputHandlers = null,
             IEnumerable<Action<string>> standardErrorHandlers = null,
             Func<string, string, Task<string>> inputRequestHandler = null,
-            ObservableCommandEvent observableCommandEvent = null, 
+            ObservableCommandEvent observableCommandEvent = null,
             IEnumerable<CancellationToken> cancellationTokens = null,
             Encoding standardOutputEncoding = null,
             Encoding standardErrorEncoding = null,
             Action<ProcessStartInfo> startInfoTransform = null)
         {
-            var t = new Task<ICommandResult>(() => 
+            var t = new Task<ICommandResult>(() =>
             {
                 var process = new Process();
                 var standardOutput = new StringBuilder();
                 var standardError = new StringBuilder();
-                
+
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
 
@@ -108,8 +92,8 @@ namespace Sheller
                     process.StartInfo.StandardErrorEncoding = standardErrorEncoding;
 
                 startInfoTransform?.Invoke(process.StartInfo);
-                
-                process.OutputDataReceived += (s, e) => 
+
+                process.OutputDataReceived += (s, e) =>
                 {
                     var data = e.Data;
                     if(data == null) return;
@@ -121,8 +105,8 @@ namespace Sheller
 
                     observableCommandEvent.FireEvent(new CommandEvent(CommandEventType.StandardOutput, data));
                 };
-                
-                process.ErrorDataReceived += (s, e) => 
+
+                process.ErrorDataReceived += (s, e) =>
                 {
                     var data = e.Data;
                     if(data == null) return;
@@ -137,7 +121,7 @@ namespace Sheller
 
                 if(inputRequestHandler != null)
                 {
-                    Task.Run(async () => 
+                    Task.Run(async () =>
                     {
                         while(true)
                         {
@@ -148,7 +132,7 @@ namespace Sheller
 
                             if(process.HasExited)
                                 break;
-                            
+
                             foreach(ProcessThread thread in process.Threads)
                             {
                                 var waitingForUser = false;
@@ -180,7 +164,7 @@ namespace Sheller
                         }
                     });
                 }
-                
+
                 if(cancellationTokens != null)
                     foreach(var ct in cancellationTokens)
                         ct.Register(() => process.Kill());
@@ -197,7 +181,7 @@ namespace Sheller
                 if(standardInputs != null)
                     foreach(var l in standardInputs)
                         process.StandardInput.WriteLine(l);
-                
+
                 process.WaitForExit();
 
                 var endTime = DateTime.Now;

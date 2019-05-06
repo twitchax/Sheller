@@ -201,7 +201,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="args">An arbitrary list of strings to be added as parameters.</param>
         /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the arguments passed to this call.</returns>
-        public virtual TIExecutable WithArgument(params string[] args) => CreateFrom(this, arguments: Helpers.MergeEnumerables(_arguments, args));
+        public virtual TIExecutable WithArgument(params string[] args) => CreateFrom(this, arguments: _arguments.Concat(args));
         IExecutable IExecutable.WithArgument(params string[] args) => WithArgument(args);
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace Sheller.Implementations.Executables
         /// </summary>
         /// <param name="waitFunc">A <see cref="Func{T}"/> which takes an <see cref="ICommandResult"/> and returns a <see cref="Task"/> which will function as wait condition upon the completion of execution.</param>
         /// <returns>A `new` instance of <typeparamref name="TIExecutable"/> with the wait func passed to this call.</returns>
-        public virtual TIExecutable WithWait(Func<ICommandResult, Task> waitFunc) => CreateFrom(this, waitFuncs: Helpers.MergeEnumerables(_waitFuncs, waitFunc.ToEnumerable()));
+        public virtual TIExecutable WithWait(Func<ICommandResult, Task> waitFunc) => CreateFrom(this, waitFuncs: _waitFuncs.Append(waitFunc));
         IExecutable IExecutable.WithWait(Func<ICommandResult, Task> waitFunc) => WithWait(waitFunc);
 
         /// <summary>

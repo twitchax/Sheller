@@ -9,6 +9,8 @@ using Sheller.Models;
 
 namespace Sheller.Implementations.Shells
 {
+    using System.Linq;
+
     /// <summary>
     /// The implementation base class for shells.
     /// </summary>
@@ -184,7 +186,7 @@ namespace Sheller.Implementations.Shells
         /// <param name="key">The environment variable key.</param>
         /// <param name="value">The environment variable value.</param>
         /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the environment variable passed in this call.</returns>
-        public virtual TIShell WithEnvironmentVariable(string key, string value) => CreateFrom(this, environmentVariables: Helpers.MergeEnumerables(_environmentVariables, new KeyValuePair<string, string>(key, value).ToEnumerable()));
+        public virtual TIShell WithEnvironmentVariable(string key, string value) => CreateFrom(this, environmentVariables: _environmentVariables.Append(new KeyValuePair<string, string>(key, value)));
         IShell IShell.WithEnvironmentVariable(string key, string value) => WithEnvironmentVariable(key, value);
                 
         /// <summary>
@@ -192,7 +194,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="variables">The list of key value pairs of environment variables.</param>
         /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the environment variables passed in this call.</returns>
-        public virtual TIShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => CreateFrom(this, environmentVariables: Helpers.MergeEnumerables(_environmentVariables, variables));
+        public virtual TIShell WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => CreateFrom(this, environmentVariables: _environmentVariables.Concat(variables));
         IShell IShell.WithEnvironmentVariables(IEnumerable<KeyValuePair<string, string>> variables) => WithEnvironmentVariables(variables);
 
         /// <summary>
@@ -200,7 +202,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="variables">The list of tuple of environment variables.</param>
         /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the environment variables passed in this call.</returns>
-        public virtual TIShell WithEnvironmentVariables(IEnumerable<(string, string)> variables) => CreateFrom(this, environmentVariables: Helpers.MergeEnumerables(_environmentVariables, variables.ToDictionary()));
+        public virtual TIShell WithEnvironmentVariables(IEnumerable<(string, string)> variables) => CreateFrom(this, environmentVariables: _environmentVariables.Concat(variables.ToDictionary()));
         IShell IShell.WithEnvironmentVariables(IEnumerable<(string, string)> variables) => WithEnvironmentVariables(variables);
 
         /// <summary>
@@ -208,7 +210,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="standardInput">A string that gets passed to the standard input stram of the executable.</param>
         /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the standard input passed to this call.</returns>
-        public TIShell WithStandardInput(string standardInput) => CreateFrom(this, standardInputs: Helpers.MergeEnumerables(_standardInputs, standardInput.ToEnumerable()));
+        public TIShell WithStandardInput(string standardInput) => CreateFrom(this, standardInputs: _standardInputs.Append(standardInput));
         IShell IShell.WithStandardInput(string standardInput) => WithStandardInput(standardInput);
 
         /// <summary>
@@ -216,7 +218,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="standardOutputHandler">An <see cref="Action"/> that handles a new line in the standard output of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the standard output handler passed to this call.</returns>
-        public virtual TIShell WithStandardOutputHandler(Action<string> standardOutputHandler) => CreateFrom(this, standardOutputHandlers: Helpers.MergeEnumerables(_standardOutputHandlers, standardOutputHandler.ToEnumerable()));
+        public virtual TIShell WithStandardOutputHandler(Action<string> standardOutputHandler) => CreateFrom(this, standardOutputHandlers: _standardOutputHandlers.Append(standardOutputHandler));
         IShell IShell.WithStandardOutputHandler(Action<string> standardOutputHandler) => WithStandardOutputHandler(standardOutputHandler);
 
         /// <summary>
@@ -224,7 +226,7 @@ namespace Sheller.Implementations.Shells
         /// </summary>
         /// <param name="standardErrorHandler">An <see cref="Action"/> that handles a new line in the standard error of the executable.</param>
         /// <returns>A `new` instance of <typeparamref name="TIShell"/> with the standard error handler passed to this call.</returns>
-        public virtual TIShell WithStandardErrorHandler(Action<string> standardErrorHandler) => CreateFrom(this, standardErrorHandlers: Helpers.MergeEnumerables(_standardErrorHandlers, standardErrorHandler.ToEnumerable()));
+        public virtual TIShell WithStandardErrorHandler(Action<string> standardErrorHandler) => CreateFrom(this, standardErrorHandlers: _standardErrorHandlers.Append(standardErrorHandler));
         IShell IShell.WithStandardErrorHandler(Action<string> standardErrorHandler) => WithStandardErrorHandler(standardErrorHandler);
 
         /// <summary>
@@ -272,7 +274,7 @@ namespace Sheller.Implementations.Shells
         /// Adds a <see cref="CancellationToken"/> (of which there may be many) to the shell context and returns a `new` context instance.
         /// </summary>
         /// <returns>A `new` instance of type <typeparamref name="TIShell"/> with the cancellation token attached.</returns>
-        public TIShell WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, cancellationTokens: Helpers.MergeEnumerables(_cancellationTokens, cancellationToken.ToEnumerable()));
+        public TIShell WithCancellationToken(CancellationToken cancellationToken) => CreateFrom(this, cancellationTokens: _cancellationTokens.Append(cancellationToken));
         IShell IShell.WithCancellationToken(CancellationToken cancellationToken) => WithCancellationToken(cancellationToken);
 
         /// <summary>
