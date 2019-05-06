@@ -13,22 +13,6 @@ namespace Sheller
 {
     internal static class Helpers
     {
-        internal static IEnumerable<T> MergeEnumerables<T>(params IEnumerable<T>[] lists)
-        {
-            foreach(var list in lists)
-            {
-                foreach(var item in list)
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        internal static IEnumerable<T> ToEnumerable<T>(this T obj)
-        {
-            yield return obj;
-        }
-
         internal static IDictionary<T, R> MergeDictionaries<T, R>(params IDictionary<T, R>[] dicts)
         {
             var result = new Dictionary<T, R>();
