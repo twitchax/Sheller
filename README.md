@@ -287,7 +287,7 @@ var echoValue = await Builder
 You can also roll your own `IShell` and `IExecutable` plugins.  For example, it would be nice to implement a `kubectl` wrapper.
 
 ```csharp
-public interface IKubectl : IExecutable
+public interface IKubectl : IExecutable<IKubectl>
 {
     IKubectl WithKubeConfig(string configPath);
     IKubectl WithApply(string yamlPath);
