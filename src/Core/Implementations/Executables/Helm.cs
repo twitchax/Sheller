@@ -50,7 +50,7 @@ namespace Sheller.Implementations.Executables
             if(this.State.TryGetValue("hasKubeConfig", out object hasKubeConfig) && (bool)hasKubeConfig)
                 throw new InvalidOperationException($"{nameof(WithKubeConfig)} can only be called once per execution context.");
             
-            return this.WithState("hasKubeConfig", true).WithArgument($"--kubeconfig={configPath}") as IHelm;
+            return this.WithState("hasKubeConfig", true).WithArgument($"--kubeconfig={configPath}");
         }
     }
 }

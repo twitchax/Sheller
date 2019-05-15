@@ -60,7 +60,7 @@ namespace Sheller.Implementations.Executables
             if(this.State.TryGetValue("hasKubeConfig", out object hasKubeConfig) && (bool)hasKubeConfig)
                 throw new InvalidOperationException($"{nameof(WithKubeConfig)} can only be called once per execution context.");
             
-            return this.WithState("hasKubeConfig", true).WithArgument($"--kubeconfig={configPath}") as IKubectl;
+            return this.WithState("hasKubeConfig", true).WithArgument($"--kubeconfig={configPath}");
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Sheller.Implementations.Executables
             if(this.State.TryGetValue("hasApply", out object hasApply) && (bool)hasApply)
                 throw new InvalidOperationException($"{nameof(WithApply)} can only be called once per execution context.");
             
-            return this.WithState("hasApply", true).WithArgument("apply", "-f", yamlPath) as IKubectl;
+            return this.WithState("hasApply", true).WithArgument("apply", "-f", yamlPath);
         }
     }
 }
