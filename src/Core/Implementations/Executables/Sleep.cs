@@ -5,7 +5,7 @@ namespace Sheller.Implementations.Executables
     /// <summary>
     /// The interface for `sleep`.
     /// </summary>
-    public interface ISleep : IExecutable {}
+    public interface ISleep : IExecutable<ISleep> {}
 
     /// <summary>
     /// The executable type for `sleep`.

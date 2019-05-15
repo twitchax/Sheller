@@ -6,7 +6,7 @@ namespace Sheller.Implementations.Shells
     /// <summary>
     /// The shell interface for `bash`.
     /// </summary>
-    public interface IBash : IShell {}
+    public interface IBash : IShell<IBash> {}
 
     /// <summary>
     /// The shell type for `bash`.

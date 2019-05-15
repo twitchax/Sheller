@@ -5,7 +5,7 @@ namespace Sheller.Implementations.Executables
     /// <summary>
     /// The interface for a generic executable.
     /// </summary>
-    public interface IGenericExe : IExecutable {}
+    public interface IGenericExe : IExecutable<IGenericExe> {}
 
     /// <summary>
     /// The executable type for a generic executable.

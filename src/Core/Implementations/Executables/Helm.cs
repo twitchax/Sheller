@@ -6,7 +6,7 @@ namespace Sheller.Implementations.Executables
     /// <summary>
     /// The interface for `helm`.
     /// </summary>
-    public interface IHelm : IExecutable
+    public interface IHelm : IExecutable<IHelm>
     {
         /// <summary>
         /// Adds a kubeconfig argument to the execution context and returns a `new` context instance.

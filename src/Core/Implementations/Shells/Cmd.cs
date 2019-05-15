@@ -6,7 +6,7 @@ namespace Sheller.Implementations.Shells
     /// <summary>
     /// The interface for a generic shell.  Note: this assumes the shell is *nixy.
     /// </summary>
-    public interface ICmd : IShell {}
+    public interface ICmd : IShell<ICmd> {}
 
     /// <summary>
     /// The shell type for `cmd.exe`.

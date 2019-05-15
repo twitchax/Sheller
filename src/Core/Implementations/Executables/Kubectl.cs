@@ -6,7 +6,7 @@ namespace Sheller.Implementations.Executables
     /// <summary>
     /// The interface for `kubectl`.
     /// </summary>
-    public interface IKubectl : IExecutable
+    public interface IKubectl : IExecutable<IKubectl>
     {
         /// <summary>
         /// Adds a kubeconfig argument to the execution context and returns a `new` context instance.
