@@ -1,6 +1,6 @@
 # Sheller
 
-[![GitHub Actions Status](https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/badge/twitchax/sheller)](https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/results/twitchax/sheller)
+[![Actions Status](https://github.com/twitchax/Sheller/workflows/build/badge.svg)](https://github.com/twitchax/AspNetCore.Proxy/actions)
 [![GitHub Release](https://img.shields.io/github/release/twitchax/sheller.svg)](https://github.com/twitchax/Sheller/releases)
 [![NuGet Version](https://img.shields.io/nuget/v/Sheller.svg)](https://www.nuget.org/packages/Sheller/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Sheller.svg)](https://www.nuget.org/packages/Sheller/)
