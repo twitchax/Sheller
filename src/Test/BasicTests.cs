@@ -369,25 +369,31 @@ namespace Sheller.Tests
             var events = new List<string>();
             var expected = "lol";
 
+            var subscriptions = new List<IDisposable>();
+
             var command1 = Builder
                 .UseShell<Bash>()
                 .UseExecutable("echo")
                 .WithArgument(expected)
                 .WithSubscribe(o =>
                 {
-                    o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
-                    {
-                        events.Add(data);
-                    }).Subscribe();
+                    subscriptions.Add(
+                        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
+                        {
+                            events.Add(data);
+                        }).Subscribe()
+                    );
                 });
 
             var command2 = command1
                 .WithSubscribe(o =>
                 {
-                    o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
-                    {
-                        events.Add(data);
-                    }).Subscribe();
+                    subscriptions.Add(
+                        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
+                        {
+                            events.Add(data);
+                        }).Subscribe()
+                    );
                 });
 
             await command1
@@ -398,6 +404,9 @@ namespace Sheller.Tests
 
             await command2
                 .ExecuteAsync();
+
+            foreach(var subscription in subscriptions)
+                subscription.Dispose();
             
             Assert.Equal(4, events.Count);
             Assert.Contains(expected, events);

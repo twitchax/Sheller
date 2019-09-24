@@ -35,14 +35,14 @@ namespace Sheller.Implementations
                 observer.OnError(e);
         }
 
-        internal void FireCompleted()
-        {
-            foreach (var observer in Observers.ToArray())
-                if (Observers.Contains(observer))
-                    observer.OnCompleted();
+        // internal void FireCompleted()
+        // {
+        //     foreach (var observer in Observers.ToArray())
+        //         if (Observers.Contains(observer))
+        //             observer.OnCompleted();
 
-            Observers.Clear();
-        }
+        //     Observers.Clear();
+        // }
 
         internal static ObservableCommandEvent Merge(ObservableCommandEvent ob1, ObservableCommandEvent ob2)
         {
