@@ -474,7 +474,7 @@ namespace Sheller.Tests
                     .UseStandardErrorEncoding(Encoding.ASCII)
                 .ExecuteAsync();
 
-            Assert.Equal(expectedAscii, echoResult.StandardOutput);
+            Assert.Equal(expectedAscii, echoResult.StandardOutput.Trim());
         }
 
         [Fact]
