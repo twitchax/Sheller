@@ -19,6 +19,7 @@ namespace Sheller.Tests
                     .UseExecutable<Kubectl>()
                         .WithKubeConfig("fake")
                         .WithKubeConfig("path")
+                        .WithApply("fake.yml")
                     .ExecuteAsync();
             });
         }

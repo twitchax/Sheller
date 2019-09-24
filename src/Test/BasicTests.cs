@@ -444,6 +444,7 @@ namespace Sheller.Tests
                 .UseExecutable<Echo>()
                     .WithArgument(expected)
                     .UseStandardOutputEncoding(Encoding.ASCII)
+                    .UseStandardErrorEncoding(Encoding.ASCII)
                 .ExecuteAsync();
 
             Assert.Equal(expectedAscii, echoValue);
