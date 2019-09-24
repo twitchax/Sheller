@@ -12,6 +12,7 @@ using Sheller.Models;
 using Xunit;
 
 // NOTE: win tests require WSL...because...lazy.
+// Uses `ToExecutable` to cover the generic code path.
 
 namespace Sheller.Tests
 {
@@ -26,6 +27,23 @@ namespace Sheller.Tests
             var echoValue = await Builder
                 .UseShell("bash")
                 .UseExecutable("echo")
+                    .WithArgument(expected)
+                .ExecuteAsync();
+
+            Assert.True(echoValue.Succeeded);
+            Assert.Equal(0, echoValue.ExitCode);
+            Assert.Equal(expected, echoValue.StandardOutput.Trim());
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanExecuteEchoClone()
+        {
+            var expected = "lol";
+
+            var echoValue = await Builder
+                .UseShell("bash")
+                .UseExecutable("echo").Clone()
                     .WithArgument(expected)
                 .ExecuteAsync();
 
@@ -142,7 +160,7 @@ namespace Sheller.Tests
             {
                 return Builder
                     .UseShell<Bash>()
-                    .UseExecutable<Sleep>()
+                    .UseExecutable<Sleep>().ToExecutable()
                         .WithArgument(max.ToString())
                         .UseTimeout(TimeSpan.FromSeconds(min + .1))
                     .ExecuteAsync();
@@ -178,14 +196,14 @@ namespace Sheller.Tests
             var expected = "lol";
             var handlerString = new StringBuilder();
 
-            var echoValue = await Builder
+            var echoResult = await Builder
                 .UseShell<Bash>()
-                .UseExecutable<Echo>()
+                .UseExecutable<Echo>().ToExecutable()
                     .WithArgument(expected)
                     .WithStandardOutputHandler(s => handlerString.Append(s))
                 .ExecuteAsync();
                 
-            Assert.Equal(expected, echoValue);
+            Assert.Equal(expected, echoResult.StandardOutput.Trim());
             Assert.Equal(expected, handlerString.ToString());
         }
 
@@ -198,7 +216,7 @@ namespace Sheller.Tests
 
             var echoResult = await Builder
                 .UseShell<Bash>()
-                .UseExecutable(">&2 echo")
+                .UseExecutable(">&2 echo").ToExecutable()
                     .WithArgument(expected)
                     .WithStandardErrorHandler(s => handlerString.Append(s))
                 .ExecuteAsync();
@@ -428,7 +446,7 @@ namespace Sheller.Tests
                 {
                     return Builder
                         .UseShell<Bash>()
-                        .UseExecutable<Sleep>()
+                        .UseExecutable<Sleep>().ToExecutable()
                         .WithArgument(max.ToString())
                         .WithCancellationToken(ctSource.Token)
                         .ExecuteAsync();
@@ -448,15 +466,15 @@ namespace Sheller.Tests
             byte[] bytes = Encoding.Default.GetBytes(expected);
             var expectedAscii = Encoding.ASCII.GetString(bytes);
 
-            var echoValue = await Builder
+            var echoResult = await Builder
                 .UseShell<Bash>()
-                .UseExecutable<Echo>()
+                .UseExecutable<Echo>().ToExecutable()
                     .WithArgument(expected)
                     .UseStandardOutputEncoding(Encoding.ASCII)
                     .UseStandardErrorEncoding(Encoding.ASCII)
                 .ExecuteAsync();
 
-            Assert.Equal(expectedAscii, echoValue);
+            Assert.Equal(expectedAscii, echoResult.StandardOutput);
         }
 
         [Fact]

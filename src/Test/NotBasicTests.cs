@@ -17,9 +17,24 @@ namespace Sheller.Tests
                 await Builder
                     .UseShell<Bash>()
                     .UseExecutable<Kubectl>()
+                        .WithApply("fake.yml")
                         .WithKubeConfig("fake")
                         .WithKubeConfig("path")
-                        .WithApply("fake.yml")
+                    .ExecuteAsync();
+            });
+        }
+
+        [Fact]
+        [Trait("os", "nix_win")]
+        public async void CanFailOnHelmKubeConfigCall()
+        {
+            await Assert.ThrowsAnyAsync<InvalidOperationException>(async () =>
+            {
+                await Builder
+                    .UseShell<Bash>()
+                    .UseExecutable<Helm>()
+                        .WithKubeConfig("fake")
+                        .WithKubeConfig("path")
                     .ExecuteAsync();
             });
         }
