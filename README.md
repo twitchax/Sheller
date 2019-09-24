@@ -1,6 +1,7 @@
 # Sheller
 
 [![Actions Status](https://github.com/twitchax/Sheller/workflows/build/badge.svg)](https://github.com/twitchax/AspNetCore.Proxy/actions)
+[![codecov](https://codecov.io/gh/twitchax/Sheller/branch/master/graph/badge.svg)](https://codecov.io/gh/twitchax/Sheller)
 [![GitHub Release](https://img.shields.io/github/release/twitchax/sheller.svg)](https://github.com/twitchax/Sheller/releases)
 [![NuGet Version](https://img.shields.io/nuget/v/Sheller.svg)](https://www.nuget.org/packages/Sheller/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Sheller.svg)](https://www.nuget.org/packages/Sheller/)
