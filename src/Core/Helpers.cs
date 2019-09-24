@@ -42,20 +42,6 @@ namespace Sheller
                 yield return new KeyValuePair<T, R>(kvp.Item1, kvp.Item2);
             }
         }
-        
-        internal static void CopyToStringDictionary(this IEnumerable<KeyValuePair<string, string>> kvps, StringDictionary dict)
-        {
-            foreach(var kvp in kvps)
-            {
-                dict.Add(kvp.Key, kvp.Value);
-            }
-        }
-
-        internal static void ForEach<T>(this IEnumerable<T> list, Action<T> functor)
-        {
-            foreach(var item in list)
-                functor(item);
-        }
 
         internal static string EscapeQuotes(this string s) => s?.Replace("\"", "\\\"");
 

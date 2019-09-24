@@ -106,6 +106,7 @@ namespace Sheller.Tests
             var echoValue = await Builder
                 .UseShell<Bash>()
                     .WithEnvironmentVariable("MY_VAR", expected)
+                    .WithEnvironmentVariables(new List<(string, string)> { ("VAR1", "value1"), ("VAR2", "value2"), })
                 .UseExecutable<Echo>()
                     .WithArgument("$MY_VAR")
                 .ExecuteAsync();
@@ -115,7 +116,7 @@ namespace Sheller.Tests
 
         [Fact]
         [Trait("os", "win")]
-        public async void CanExecuteEchoWithGenericAndEnvironmentVariablewin()
+        public async void CanExecuteEchoWithGenericAndEnvironmentVariableWin()
         {
             var expected = "lol";
 
