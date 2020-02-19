@@ -90,9 +90,9 @@ namespace Sheller.Tests
             var exception = await Assert.ThrowsAsync<ExecutionFailedException>(async () =>
             {
                 var echoValue = await Builder
-                .UseShell<Bash>()
-                .UseExecutable("foo")
-                .ExecuteAsync();
+                    .UseShell<Bash>()
+                    .UseExecutable("foo")
+                    .ExecuteAsync();
             });
 
             Assert.False(exception.Result.Succeeded);
@@ -117,7 +117,7 @@ namespace Sheller.Tests
 
         [Fact]
         [Trait("os", "nix_win")]
-        public async void CanExecuteEchoWithGenericAndEnvironmentVariableNix()
+        public async void CanExecuteEchoWithGenericAndEnvironmentVariable()
         {
             var expected = "lol";
 

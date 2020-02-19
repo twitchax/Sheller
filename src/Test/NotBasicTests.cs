@@ -38,5 +38,22 @@ namespace Sheller.Tests
                     .ExecuteAsync();
             });
         }
+
+        [Fact]
+        [Trait("os", "win")]
+        public async void CanUseCmd()
+        {
+            var expected = "lol";
+
+            var echoValue = await Builder
+                .UseShell<Cmd>()
+                .UseExecutable("echo")
+                    .WithArgument(expected)
+                .ExecuteAsync();
+
+            Assert.True(echoValue.Succeeded);
+            Assert.Equal(0, echoValue.ExitCode);
+            Assert.Equal(expected, echoValue.StandardOutput.Trim());
+        }
     }
 }
