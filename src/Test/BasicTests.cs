@@ -72,7 +72,7 @@ namespace Sheller.Tests
         public async void CanExecuteEchoWithSwappedShell()
         {
             var expected = "lol";
-            
+
             var echoValue = await Builder.UseShell("not_a_shell_lol").UseExecutable<Echo>()
                 .UseShell(Builder.UseShell<Bash>())
                 .WithArgument(expected)
@@ -116,7 +116,7 @@ namespace Sheller.Tests
         }
 
         [Fact]
-        [Trait("os", "nix")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithGenericAndEnvironmentVariableNix()
         {
             var expected = "lol";
@@ -127,22 +127,6 @@ namespace Sheller.Tests
                     .WithEnvironmentVariables(new List<(string, string)> { ("VAR1", "value1"), ("VAR2", "value2"), })
                 .UseExecutable<Echo>()
                     .WithArgument("$MY_VAR")
-                .ExecuteAsync();
-
-            Assert.Equal(expected, echoValue);
-        }
-
-        [Fact]
-        [Trait("os", "win")]
-        public async void CanExecuteEchoWithGenericAndEnvironmentVariableWin()
-        {
-            var expected = "lol";
-
-            var echoValue = await Builder
-                .UseShell<Bash>()
-                    .WithEnvironmentVariable("MY_VAR", expected)
-                .UseExecutable<Echo>()
-                    .WithArgument("\\$MY_VAR")
                 .ExecuteAsync();
 
             Assert.Equal(expected, echoValue);
@@ -184,7 +168,7 @@ namespace Sheller.Tests
                 .UseExecutable<Echo>()
                     .WithArgument(expected)
                 .ExecuteAsync();
-                
+
             Assert.Equal(expected, echoValue);
             Assert.Equal(expected, handlerString.ToString());
         }
@@ -202,7 +186,7 @@ namespace Sheller.Tests
                     .WithArgument(expected)
                     .WithStandardOutputHandler(s => handlerString.Append(s))
                 .ExecuteAsync();
-                
+
             Assert.Equal(expected, echoResult.StandardOutput.Trim());
             Assert.Equal(expected, handlerString.ToString());
         }
@@ -220,7 +204,7 @@ namespace Sheller.Tests
                     .WithArgument(expected)
                     .WithStandardErrorHandler(s => handlerString.Append(s))
                 .ExecuteAsync();
-            
+
             Assert.Equal(expected, echoResult.StandardError.Trim());
             Assert.Equal(expected, handlerString.ToString());
         }
@@ -238,7 +222,7 @@ namespace Sheller.Tests
                     .WithStandardInput(expected1)
                     .WithStandardInput(expected2)
                 .ExecuteAsync();
-            
+
             Assert.Equal($"{expected1}{expected2}", echoResult.StandardOutput.Trim());
         }
 
@@ -251,16 +235,16 @@ namespace Sheller.Tests
 
             var echoResult = await Builder
                 .UseShell<Bash>()
-                .UseExecutable("read var1; read var2; echo \\$var1\\$var2")
+                .UseExecutable("read var1; read var2; echo $var1$var2")
                     .WithStandardInput(expected1)
                     .WithStandardInput(expected2)
                 .ExecuteAsync();
-            
+
             Assert.Equal($"{expected1}\r\n{expected2}", echoResult.StandardOutput.Trim());
         }
 
         [Fact]
-        [Trait("os", "nix")]
+        [Trait("os", "nix_win")]
         public async void CanExecuteEchoWithInputRequestHandlerNix()
         {
             var expected1 = "hello";
@@ -269,33 +253,13 @@ namespace Sheller.Tests
             var echoResult = await Builder
                 .UseShell<Bash>()
                 .UseExecutable($"echo {expected1}; read var1; echo $var1")
-                .UseInputRequestHandler((stdout, stderr) =>
+                .UseInputRequestHandler((stdout, _) =>
                 {
                     Assert.Contains(expected1, stdout);
                     return Task.FromResult(expected2);
                 })
                 .ExecuteAsync();
-            
-            Assert.Contains($"{expected2}", echoResult.StandardOutput);
-        }
 
-        [Fact]
-        [Trait("os", "win")]
-        public async void CanExecuteEchoWithInputRequestHandlerWin()
-        {
-            var expected1 = "hello";
-            var expected2 = "lol";
-
-            var echoResult = await Builder
-                .UseShell<Bash>()
-                .UseExecutable($"echo {expected1}; read var1; echo \\$var1")
-                .UseInputRequestHandler((stdout, stderr) =>
-                {
-                    Assert.Contains(expected1, stdout);
-                    return Task.FromResult(expected2);
-                })
-                .ExecuteAsync();
-            
             Assert.Contains($"{expected2}", echoResult.StandardOutput);
         }
 
@@ -309,11 +273,8 @@ namespace Sheller.Tests
                 .UseShell<Bash>()
                 .UseExecutable<Echo>()
                     .WithArgument("dummy")
-                .ExecuteAsync(cr => 
-                {
-                    return cr.ExitCode;
-                });
-                
+                .ExecuteAsync(cr => cr.ExitCode);
+
             Assert.Equal(expected, echoErrorCode);
         }
 
@@ -332,7 +293,7 @@ namespace Sheller.Tests
                     await Task.Delay(100);
                     return cr.ExitCode;
                 });
-                
+
             Assert.Equal(expected, echoErrorCode);
         }
 
@@ -396,10 +357,7 @@ namespace Sheller.Tests
                 .WithSubscribe(o =>
                 {
                     subscriptions.Add(
-                        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
-                        {
-                            events.Add(data);
-                        }).Subscribe()
+                        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data => events.Add(data)).Subscribe()
                     );
                 });
 
@@ -407,10 +365,7 @@ namespace Sheller.Tests
                 .WithSubscribe(o =>
                 {
                     subscriptions.Add(
-                        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data =>
-                        {
-                            events.Add(data);
-                        }).Subscribe()
+                        o.Where(ev => ev.Type == CommandEventType.StandardOutput).Select(ev => ev.Data).Do(data => events.Add(data)).Subscribe()
                     );
                 });
 
@@ -425,37 +380,37 @@ namespace Sheller.Tests
 
             foreach(var subscription in subscriptions)
                 subscription.Dispose();
-            
+
             Assert.Equal(4, events.Count);
             Assert.Contains(expected, events);
         }
 
         [Fact]
-        [Trait("os", "nix_win")]
+        [Trait("os", "nix")]
         public async void CanExecuteAndCancel()
         {
             var min = 2;
-            var max = 4;
+            var max = 10;
 
-            using (var ctSource = new CancellationTokenSource())
+            using var ctSource = new CancellationTokenSource();
+
+            ctSource.CancelAfter(TimeSpan.FromSeconds(min + .5));
+
+            var start = DateTime.Now;
+            await Assert.ThrowsAsync<ExecutionFailedException>(() =>
             {
-                ctSource.CancelAfter(TimeSpan.FromSeconds(min + .5));
-                
-                var start = DateTime.Now;
-                await Assert.ThrowsAsync<ExecutionFailedException>(() =>
-                {
-                    return Builder
-                        .UseShell<Bash>()
-                        .UseExecutable<Sleep>().ToExecutable()
-                        .WithArgument(max.ToString())
-                        .WithCancellationToken(ctSource.Token)
-                        .ExecuteAsync();
-                });
-                var delta = DateTime.Now - start;
+                return Builder
+                    .UseShell<Bash>()
+                    .UseExecutable<Sleep>().ToExecutable()
+                    .WithArgument(max.ToString())
+                    .WithCancellationToken(ctSource.Token)
+                    .ExecuteAsync();
+            });
 
-                Assert.True(delta.TotalSeconds > min);
-                Assert.True(delta.TotalSeconds < max);
-            }
+            var delta = DateTime.Now - start;
+
+            Assert.True(delta.TotalSeconds > min);
+            Assert.True(delta.TotalSeconds < max);
         }
 
         [Fact]
@@ -519,10 +474,7 @@ namespace Sheller.Tests
             var echoValue = await Builder
                 .UseShell<Bash>()
                 .UseExecutable("dummy")
-                    .UseStartInfoTransform(si => 
-                    {
-                        (si as ProcessStartInfo).Arguments = $"-c \"echo {expected}\";";
-                    })
+                    .UseStartInfoTransform(si => si.Arguments = $"-c \"echo {expected}\";")
                 .ExecuteAsync();
 
             Assert.Equal(expected, echoValue.StandardOutput.Trim());
