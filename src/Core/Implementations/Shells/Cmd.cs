@@ -32,8 +32,8 @@ namespace Sheller.Implementations.Shells
         public override string GetCommandArgument(string executableCommand)
         {
             // TODO: this may not work?  But...ehhh.
-            var environmentVariables = this.EnvironmentVariables.Aggregate("", (agg, kvp) => agg += $"set {kvp.Key}=\"{kvp.Value.EscapeQuotes()}\" && ");
-            return $"/c \"{environmentVariables}{ executableCommand.EscapeQuotes() }\"";
+            var environmentVariables = this.EnvironmentVariables.Aggregate("", (agg, kvp) => agg += $"set {kvp.Key}={kvp.Value} && ");
+            return $"/c \"{environmentVariables}{ executableCommand }\"";
         }
     }
 }
